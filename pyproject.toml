@@ -1,0 +1,25 @@
+[project]
+name = "lpupdate"
+version = "0.1.0"
+description = "Gmail quarterly investor update ingestion and flexible storage pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "google-api-python-client>=2.0.0",
+  "google-auth-oauthlib>=1.0.0",
+  "google-auth-httplib2>=0.2.0",
+  "psycopg[binary]>=3.2.0",
+]
+
+[project.scripts]
+lpupdate = "lpupdate.cli:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

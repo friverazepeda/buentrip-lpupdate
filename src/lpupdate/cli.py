@@ -16,6 +16,7 @@ from .db import apply_schema, connect, get_company_metrics, get_company_updates,
 from .ingest import normalize_message, save_attachment
 from .parse_updates import load_raw_message, normalize_update
 from .pdf_extract import extract_pdf_text
+from .reporting import generate_report_site
 from .schema import SCHEMA_SQL
 from .store import ensure_data_dir, write_json
 
@@ -307,6 +308,14 @@ def cmd_show_attachment_text(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_generate_report(_: argparse.Namespace) -> int:
+    parsed_dir = ensure_data_dir('data/parsed_updates')
+    out_dir = ensure_data_dir('reports')
+    result = generate_report_site(parsed_dir, out_dir)
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def cmd_print_schema(_: argparse.Namespace) -> int:
     print(SCHEMA_SQL.strip())
     return 0
@@ -368,6 +377,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("gmail_message_id")
     p.add_argument("--max-chars", type=int, default=4000)
     p.set_defaults(func=cmd_show_attachment_text)
+
+    p = sub.add_parser("generate-report", help="generate static one-page-per-startup report site")
+    p.set_defaults(func=cmd_generate_report)
 
     p = sub.add_parser("print-schema", help="print proposed Postgres schema")
     p.set_defaults(func=cmd_print_schema)

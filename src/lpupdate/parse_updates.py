@@ -12,10 +12,29 @@ MONTHS = {
 
 
 SECTION_ALIASES = {
-    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?'],
+    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?', 'Investor Update – Q4'],
     'asks': ['How you can help', 'Asks', 'Thanks and Asks', '👍 How can you help?', '🙏 Asks'],
     'risks': ['Risks', 'The Bad', '🔴 The Bad: Strategic Consolidation'],
 }
+
+
+SECTION_START_HINTS = [
+    'key updates', 'highlights', 'kpi', 'kpi’s', "kpi's", 'runway', 'debt & finance',
+    'debt & financing', 'fundraising', 'operations', 'tech', 'peru monthly kpi',
+    'mexico monthly kpi', 'leasy kpi', 'investor update – q4', 'investor update - q4',
+]
+
+
+SECTION_END_HINTS = [
+    'how you can help', 'asks', 'thanks and asks', 'learn more', 'wrapped & founders reflection',
+    'wrapped -', 'finance comments', 'budget analysis', 'financials q4', 'onwards,',
+    'thank you for your continued support', '--', 'frivera@buentrip.vc',
+]
+
+
+CONFIDENCE_HIGH = 0.95
+CONFIDENCE_MEDIUM = 0.8
+CONFIDENCE_LOW = 0.6
 
 
 def load_raw_message(path: str | Path) -> dict[str, Any]:
@@ -56,7 +75,7 @@ def infer_company(subject: str | None, body_text: str | None) -> str | None:
 
 
 def infer_period(subject: str | None, body_text: str | None) -> dict[str, Any]:
-    text = ' '.join(filter(None, [subject, body_text[:2000] if body_text else None]))
+    text = ' '.join(filter(None, [subject, body_text[:4000] if body_text else None]))
     quarter_match = re.search(r'Q([1-4])[-\s]?(?:20)?(\d{2,4})', text, re.IGNORECASE)
     if quarter_match:
         q = int(quarter_match.group(1))
@@ -101,216 +120,221 @@ def _money_number(value: str) -> float:
     return float(cleaned) * mult
 
 
-def extract_metrics(body_text: str | None) -> dict[str, Any]:
-    text = (body_text or '').replace('*', '')
-    metrics: dict[str, Any] = {}
+def _normalize_text(text: str | None) -> str:
+    value = text or ''
+    value = value.replace('\u202f', ' ').replace('\xa0', ' ')
+    value = value.replace('–', '-').replace('—', '-')
+    value = value.replace('“', '"').replace('”', '"').replace('’', "'")
+    value = re.sub(r'\*+', '', value)
+    value = re.sub(r'[ \t]+', ' ', value)
+    value = re.sub(r'\n{3,}', '\n\n', value)
+    return value.strip()
 
-    patterns = {
-        'cash': r'Cash(?: at (?:the end of the month|Bank))?\s*:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)',
-        'monthly_cash_burn': r'(?:Monthly|Net) cash burn.*?:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)',
-        'runway_months': r'(?:Implied runway|Cash Runway|Runway)\s*:\s*~?\s*(\d+(?:\.\d+)?)\s*(?:months?|x)?',
-        'revenue_current': r'revenues? from \$([\d,.]+[mk]?) to \$([\d,.]+[mk]?)',
-        'gross_profit_current': r'gross profit from ~?\$([\d,.]+[mk]?) to ~?\$([\d,.]+[mk]?)',
-        'adj_ebitda_range': r'generating \$([\d,.]+[mk]?)\s*[-–]\s*([\d,.]+[mk]?) of adj\. EBITDA',
-        'adj_ebitda_single': r'generating \$([\d,.]+[mk]?)\+? of adj\. EBITDA',
-        'arr': r'\$([\d,.]+(?:\.\d+)?[mk]?)\s*ARR',
-        'mrr': r'\$([\d,.]+(?:\.\d+)?[mk]?)\s*MRR',
-        'net_revenue': r'\$([\d,.]+(?:\.\d+)?[mk]?)\+?/yr of net\s+revenue',
-        'annual_revenue_range': r'\$([\d,.]+(?:\.\d+)?)([mk]?)\s*[-–]\s*\$([\d,.]+(?:\.\d+)?)([mk]?)\+? in annual revenue',
-        'gross_profit_range': r'\$([\d,.]+(?:\.\d+)?)([mk]?)\s*[-–]\s*\$([\d,.]+(?:\.\d+)?)([mk]?)\s*gross profit',
-        'gross_margin_percent': r'(\d+(?:\.\d+)?)%\s+increase in gross margin',
-        'ebitda_per_load_percent': r'(\d+(?:\.\d+)?)%\s+EBITDA per load increase',
-        'cost_to_serve_percent': r'(\d+(?:\.\d+)?)%\s+reduction in cost to serve',
-        'ai_sourced_shipments_percent': r'(\d+(?:\.\d+)?)% of shipments\s+had a bid sourced',
-        'ai_booked_loads_percent': r'(\d+(?:\.\d+)?)% of all loads are fully sourced, negotiated, and booked',
-        'active_clients': r'(\d+(?:,\d+)*)\s+active clients',
-        'loads_month1': r'(\d+(?:\+)?)\s+loads in month 1',
-        'headcount_hires': r'We hired\s+(\d+)\s+new engineers',
+
+def _strip_signature(text: str) -> str:
+    patterns = [
+        r'\n--\s*\n.*$',
+        r'\nOnwards,.*$',
+        r'\nThank you for your continued support,.*$',
+    ]
+    for pattern in patterns:
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
+    return text
+
+
+def _relevant_metric_text(text: str) -> str:
+    return _normalize_text(text)
+
+
+def _line_snippet(text: str, start: int, end: int, window: int = 220) -> str:
+    snippet = text[max(0, start - window): min(len(text), end + window)]
+    snippet = snippet.replace('\n', ' ').strip()
+    snippet = re.sub(r'\s+', ' ', snippet)
+    return snippet[:400]
+
+
+def _set_metric(metrics: dict[str, Any], confidence: dict[str, Any], name: str, value: Any, snippet: str, score: float, origin: str) -> None:
+    if name in metrics:
+        return
+    metrics[name] = value
+    confidence[name] = {
+        'score': score,
+        'origin': origin,
+        'source_snippet': snippet,
     }
+
+
+def _parse_money_value(raw_value: str, currency: str = 'USD', period: str | None = None) -> dict[str, Any]:
+    payload = {'value': _money_number(raw_value), 'currency': currency}
+    if period:
+        payload['period'] = period
+    return payload
+
+
+def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, Any]]:
+    text = _relevant_metric_text(body_text or '')
+    metrics: dict[str, Any] = {}
+    confidence: dict[str, Any] = {}
 
     metric_aliases = {
-        'mrr': ('mrr', 'money', 'monthly'),
-        'arr': ('arr', 'money', 'annual'),
-        'annualized run rate': ('arr', 'money', 'annual'),
-        'q4 revenue generated': ('quarter_revenue', 'money', 'quarterly'),
-        'revenue to date': ('revenue_to_date', 'money', None),
-        'gross margin': ('gross_margin_percent', 'percent', None),
-        'growth run rate': ('growth_run_rate_percent', 'percent', None),
-        'customers & pilots': ('customers_and_pilots', 'int', None),
-        'customers and pilots': ('customers_and_pilots', 'int', None),
-        'countries active': ('countries_active', 'int', None),
-        'gmv managed': ('gmv_managed', 'money', None),
-        'documents processed': ('documents_processed', 'int', None),
-        'suppliers': ('suppliers', 'int', None),
-        'cash at the end of the month': ('cash', 'money', None),
-        'cash at bank': ('cash', 'money', None),
-        'net cash burn': ('monthly_cash_burn', 'money', 'monthly'),
-        'runway': ('runway_months', 'float', None),
-        'cash runway': ('runway_months', 'float', None),
-        'churn rate': ('churn_rate_percent', 'percent', None),
-        'cac inbound': ('cac_inbound', 'money', None),
-        'accumulated roas 2025': ('roas_2025', 'float', None),
-        'active clients': ('active_clients', 'int', None),
-        'impressions': ('impressions', 'int', None),
-        'video views': ('video_views', 'int', None),
-        'comments': ('comments_count', 'int', None),
-        'saves': ('saves_count', 'int', None),
-        'dm sends': ('dm_sends', 'int', None),
+        'mrr': ('mrr', 'money', 'monthly', 'USD'),
+        'a.r.r': ('arr', 'money', 'annual', 'USD'),
+        'arr': ('arr', 'money', 'annual', 'USD'),
+        'annualized run rate': ('arr', 'money', 'annual', 'USD'),
+        'q4 revenue generated': ('quarter_revenue', 'money', 'quarterly', 'USD'),
+        'revenue to date': ('revenue_to_date', 'money', None, 'USD'),
+        'gross margin': ('gross_margin_percent', 'percent', None, None),
+        'growth run rate': ('growth_run_rate_percent', 'percent', None, None),
+        'customers & pilots': ('customers_and_pilots', 'int', None, None),
+        'customers and pilots': ('customers_and_pilots', 'int', None, None),
+        'countries active': ('countries_active', 'int', None, None),
+        'gmv managed': ('gmv_managed', 'money', None, 'USD'),
+        'documents processed': ('documents_processed', 'int', None, None),
+        'suppliers': ('suppliers', 'int', None, None),
+        'cash at the end of the month': ('cash', 'money', None, 'USD'),
+        'cash at bank': ('cash', 'money', None, 'USD'),
+        'cash': ('cash', 'money', None, 'USD'),
+        'net cash burn': ('monthly_cash_burn', 'money', 'monthly', 'USD'),
+        'monthly cash burn': ('monthly_cash_burn', 'money', 'monthly', 'USD'),
+        'runway': ('runway_months', 'float', None, None),
+        'cash runway': ('runway_months', 'float', None, None),
+        'churn rate': ('churn_rate_percent', 'percent', None, None),
+        'cac inbound': ('cac_inbound', 'money', None, 'USD'),
+        'accumulated roas 2025': ('roas_2025', 'float', None, None),
+        'active clients': ('active_clients', 'int', None, None),
+        'impressions': ('impressions', 'int', None, None),
+        'video views': ('video_views', 'int', None, None),
+        'comments': ('comments_count', 'int', None, None),
+        'saves': ('saves_count', 'int', None, None),
+        'dm sends': ('dm_sends', 'int', None, None),
+        'avg. down payment': ('avg_down_payment', 'money', None, 'USD'),
+        'time to evaluate': ('time_to_evaluate_hours', 'hours', None, None),
+        'time of evaluation': ('time_to_evaluate_hours', 'hours', None, None),
+        'time to deliver car': ('time_to_deliver_car_days', 'days', None, None),
+        'customer cycle': ('customer_cycle_days', 'days', None, None),
+        'team size': ('team_size', 'int', None, None),
+        'new contracts': ('new_contracts', 'int', None, None),
+        'pre-approved capital': ('pre_approved_capital', 'money', None, 'USD'),
+        'drawn capital': ('drawn_capital', 'money', None, 'USD'),
     }
 
-    def parse_money(value: str) -> dict[str, Any] | None:
-        m = re.search(r'(?:US\$|\$)\s*([\d,]+(?:\.\d+)?\s*(?:mm|m|k)?)', value, re.IGNORECASE)
+    def parse_money(raw_value: str, currency: str = 'USD', period: str | None = None) -> dict[str, Any] | None:
+        m = re.search(r'(?:US\$|\$)\s*([\d,]+(?:\.\d+)?\s*(?:mm|m|k)?)', raw_value, re.IGNORECASE)
         if not m:
             return None
-        return {'value': _money_number(m.group(1).replace(' ', '')), 'currency': 'USD'}
+        return _parse_money_value(m.group(1).replace(' ', ''), currency=currency, period=period)
 
-    def parse_percent(value: str) -> float | None:
-        m = re.search(r'([+-]?\d+(?:\.\d+)?)\s*%', value)
+    def parse_percent(raw_value: str) -> float | None:
+        m = re.search(r'([+-]?\d+(?:\.\d+)?)\s*%', raw_value)
         return float(m.group(1)) if m else None
 
-    def parse_int(value: str) -> int | None:
-        m = re.search(r'([\d,]+)', value)
+    def parse_int(raw_value: str) -> int | None:
+        m = re.search(r'([\d,]+)', raw_value)
         return int(m.group(1).replace(',', '')) if m else None
 
-    def parse_float(value: str) -> float | None:
-        m = re.search(r'([\d,]+(?:\.\d+)?)', value)
+    def parse_float(raw_value: str) -> float | None:
+        m = re.search(r'([\d,]+(?:\.\d+)?)', raw_value)
         return float(m.group(1).replace(',', '')) if m else None
 
-    def set_metric_from_alias(label: str, raw_value: str):
-        normalized = re.sub(r'\s+', ' ', label.strip().lower())
-        alias = metric_aliases.get(normalized)
-        if not alias or alias[0] in metrics:
-            return
-        key, kind, period = alias
-        if kind == 'money':
-            parsed = parse_money(raw_value)
-            if parsed:
-                if period:
-                    parsed['period'] = period
-                metrics[key] = parsed
-        elif kind == 'percent':
-            parsed = parse_percent(raw_value)
-            if parsed is not None:
-                metrics[key] = parsed
-        elif kind == 'int':
-            parsed = parse_int(raw_value)
-            if parsed is not None:
-                metrics[key] = parsed
-        elif kind == 'float':
-            parsed = parse_float(raw_value)
-            if parsed is not None:
-                metrics[key] = parsed
+    def parse_hours(raw_value: str) -> float | None:
+        m = re.search(r'(\d+(?:\.\d+)?)\s*hours?', raw_value, re.IGNORECASE)
+        return float(m.group(1)) if m else None
+
+    def parse_days(raw_value: str) -> float | None:
+        m = re.search(r'(\d+(?:\.\d+)?)\s*days?', raw_value, re.IGNORECASE)
+        return float(m.group(1)) if m else None
 
     for line in text.splitlines():
         cleaned = line.strip().lstrip('-•').strip()
         if not cleaned or ':' not in cleaned:
             continue
         label, raw_value = cleaned.split(':', 1)
-        set_metric_from_alias(label, raw_value.strip())
+        normalized = re.sub(r'\s+', ' ', label.strip().lower())
+        alias = metric_aliases.get(normalized)
+        if not alias:
+            continue
+        key, kind, period, currency = alias
+        if key in metrics:
+            continue
+        if kind == 'money':
+            parsed = parse_money(raw_value, currency=currency or 'USD', period=period)
+        elif kind == 'percent':
+            parsed = parse_percent(raw_value)
+        elif kind == 'int':
+            parsed = parse_int(raw_value)
+        elif kind == 'float':
+            parsed = parse_float(raw_value)
+        elif kind == 'hours':
+            parsed = parse_hours(raw_value)
+        elif kind == 'days':
+            parsed = parse_days(raw_value)
+        else:
+            parsed = None
+        if parsed is not None:
+            _set_metric(metrics, confidence, key, parsed, cleaned, CONFIDENCE_HIGH, 'labeled_line')
 
-    def set_money(name: str, match_key: str, period: str | None = None):
-        m = re.search(patterns[match_key], text, re.IGNORECASE)
-        if m and name not in metrics:
-            payload = {'value': _money_number(m.group(1)), 'currency': 'USD'}
-            if period:
-                payload['period'] = period
-            metrics[name] = payload
+    regex_specs = [
+        ('cash', r'Cash(?: at (?:the end of the month|Bank))?\s*:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'runway_section'),
+        ('monthly_cash_burn', r'(?:Monthly|Net) cash burn.*?:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)', lambda m: _parse_money_value(m.group(1), period='monthly'), CONFIDENCE_HIGH, 'runway_section'),
+        ('runway_months', r'(?:Implied runway|Cash Runway|Runway)\s*:\s*~?\s*(\d+(?:\.\d+)?)\s*(?:months?|x)?', lambda m: float(m.group(1)), CONFIDENCE_HIGH, 'runway_section'),
+        ('revenue', r'revenues? from \$([\d,.]+[mk]?) to \$([\d,.]+[mk]?)', lambda m: {'previous_value': _money_number(m.group(1)), 'current_value': _money_number(m.group(2)), 'currency': 'USD'}, CONFIDENCE_MEDIUM, 'narrative_growth'),
+        ('gross_profit', r'gross profit from ~?\$([\d,.]+[mk]?) to ~?\$([\d,.]+[mk]?)', lambda m: {'previous_value': _money_number(m.group(1)), 'current_value': _money_number(m.group(2)), 'currency': 'USD'}, CONFIDENCE_MEDIUM, 'narrative_growth'),
+        ('annual_revenue_range', r'\$([\d,.]+(?:\.\d+)?)([mk]?)\s*-\s*\$([\d,.]+(?:\.\d+)?)([mk]?)\+? in annual revenue', lambda m: {'low': _money_number(m.group(1) + (m.group(2) or m.group(4))), 'high': _money_number(m.group(3) + (m.group(4) or m.group(2))), 'currency': 'USD'}, CONFIDENCE_LOW, 'transaction_scenario'),
+        ('gross_profit_range', r'\$([\d,.]+(?:\.\d+)?)([mk]?)\s*-\s*\$([\d,.]+(?:\.\d+)?)([mk]?)\s*gross profit', lambda m: {'low': _money_number(m.group(1) + (m.group(2) or m.group(4))), 'high': _money_number(m.group(3) + (m.group(4) or m.group(2))), 'currency': 'USD'}, CONFIDENCE_LOW, 'transaction_scenario'),
+        ('adj_ebitda_expected', r'generating \$([\d,.]+[mk]?)\s*-\s*([\d,.]+[mk]?) of adj\. EBITDA', lambda m: {'low': _money_number(m.group(1)), 'high': _money_number(m.group(2)), 'currency': 'USD'}, CONFIDENCE_LOW, 'forward_looking'),
+        ('adj_ebitda_expected', r'generating \$([\d,.]+[mk]?)\+? of adj\. EBITDA', lambda m: {'value': _money_number(m.group(1)), 'currency': 'USD'}, CONFIDENCE_LOW, 'forward_looking'),
+        ('gross_margin_increase_percent', r'(\d+(?:\.\d+)?)%\s+increase in gross margin', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'operational_case_study'),
+        ('ebitda_per_load_increase_percent', r'(\d+(?:\.\d+)?)%\s+EBITDA per load increase', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'operational_case_study'),
+        ('cost_to_serve_reduction_percent', r'(\d+(?:\.\d+)?)%\s+reduction in cost to serve', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'operational_case_study'),
+        ('ai_sourced_shipments_percent', r'(\d+(?:\.\d+)?)% of shipments\s+had a bid sourced', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'operational_case_study'),
+        ('ai_booked_loads_percent', r'(\d+(?:\.\d+)?)% of (?:all loads|shipments) (?:are|were) fully sourced, negotiated, and booked', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'operational_case_study'),
+        ('new_engineers_hired', r'We hired\s+(\d+)\s+new engineers', lambda m: int(m.group(1)), CONFIDENCE_MEDIUM, 'narrative_hiring'),
+        ('active_clients', r'\b(\d+(?:,\d+)*)\s+active clients\b', lambda m: int(m.group(1).replace(',', '')), CONFIDENCE_HIGH, 'headline_kpi'),
+    ]
 
-    set_money('cash', 'cash')
-    set_money('monthly_cash_burn', 'monthly_cash_burn', period='monthly')
-    set_money('arr', 'arr', period='annual')
-    set_money('mrr', 'mrr', period='monthly')
-    set_money('net_revenue', 'net_revenue', period='annual')
+    for name, pattern, builder, score, origin in regex_specs:
+        if name in metrics:
+            continue
+        m = re.search(pattern, text, re.IGNORECASE)
+        if not m:
+            continue
+        _set_metric(metrics, confidence, name, builder(m), _line_snippet(text, m.start(), m.end()), score, origin)
 
-    m = re.search(patterns['runway_months'], text, re.IGNORECASE)
-    if m and 'runway_months' not in metrics:
-        metrics['runway_months'] = float(m.group(1))
+    leasy_table_patterns = [
+        ('arr', r'A\.R\.R\s*\n\$([\d,.]+[mk]?)', lambda m: _parse_money_value(m.group(1), period='annual'), CONFIDENCE_HIGH, 'kpi_deck'),
+        ('pre_approved_capital', r'Pre-Approved Capital\s*Drawn capital\s*\n\$([\d,.]+[mk]?)\$([\d,.]+[mk]?)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'kpi_deck'),
+        ('drawn_capital', r'Pre-Approved Capital\s*Drawn capital\s*\n\$([\d,.]+[mk]?)\$([\d,.]+[mk]?)', lambda m: _parse_money_value(m.group(2)), CONFIDENCE_HIGH, 'kpi_deck'),
+        ('new_contracts', r'New Contracts\s*\n\(\+[^\n]+\)\s*\n\+?(\d+(?:,\d+)*)', lambda m: int(m.group(1).replace(',', '')), CONFIDENCE_HIGH, 'kpi_deck'),
+        ('team_size', r'Team Size\s*\n\(\+[^\n]+\)\s*\n(\d+(?:,\d+)*)', lambda m: int(m.group(1).replace(',', '')), CONFIDENCE_HIGH, 'kpi_deck'),
+        ('cash', r'over \$([\d,.]+[mk]?) in our cash account', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'finance_section'),
+        ('avg_down_payment', r'Avg\. Down Payment:\s*\$([\d,.]+)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'kpi_line_item'),
+        ('time_to_evaluate_hours', r'Time to Evaluate:\s*(\d+(?:\.\d+)?)\s*hours?', lambda m: float(m.group(1)), CONFIDENCE_HIGH, 'kpi_line_item'),
+        ('time_to_deliver_car_days', r'Time to Deliver Car\*?:\s*(\d+(?:\.\d+)?)\s*days?', lambda m: float(m.group(1)), CONFIDENCE_HIGH, 'kpi_line_item'),
+        ('customer_cycle_days', r'Customer Cycle:\s*(\d+(?:\.\d+)?)\s*days?', lambda m: float(m.group(1)), CONFIDENCE_HIGH, 'kpi_line_item'),
+    ]
 
-    m = re.search(patterns['revenue_current'], text, re.IGNORECASE)
-    if m:
-        metrics['revenue'] = {
-            'previous_value': _money_number(m.group(1)),
-            'current_value': _money_number(m.group(2)),
-            'currency': 'USD',
-        }
-
-    m = re.search(patterns['gross_profit_current'], text, re.IGNORECASE)
-    if m:
-        metrics['gross_profit'] = {
-            'previous_value': _money_number(m.group(1)),
-            'current_value': _money_number(m.group(2)),
-            'currency': 'USD',
-        }
-
-    m = re.search(patterns['annual_revenue_range'], text, re.IGNORECASE)
-    if m:
-        low_num, low_sfx, high_num, high_sfx = m.groups()
-        if not low_sfx and high_sfx:
-            low_sfx = high_sfx
-        metrics['annual_revenue_range'] = {
-            'low': _money_number(low_num + low_sfx),
-            'high': _money_number(high_num + high_sfx),
-            'currency': 'USD',
-        }
-
-    m = re.search(patterns['gross_profit_range'], text, re.IGNORECASE)
-    if m:
-        low_num, low_sfx, high_num, high_sfx = m.groups()
-        if not low_sfx and high_sfx:
-            low_sfx = high_sfx
-        metrics['gross_profit_range'] = {
-            'low': _money_number(low_num + low_sfx),
-            'high': _money_number(high_num + high_sfx),
-            'currency': 'USD',
-        }
-
-    m = re.search(patterns['adj_ebitda_range'], text, re.IGNORECASE)
-    if m:
-        metrics['adj_ebitda_expected'] = {
-            'low': _money_number(m.group(1)),
-            'high': _money_number(m.group(2)),
-            'currency': 'USD',
-        }
-    else:
-        m = re.search(patterns['adj_ebitda_single'], text, re.IGNORECASE)
-        if m:
-            metrics['adj_ebitda_expected'] = {
-                'value': _money_number(m.group(1)),
-                'currency': 'USD',
-            }
-
-    def set_percent(name: str, key: str):
-        m = re.search(patterns[key], text, re.IGNORECASE)
-        if m and name not in metrics:
-            metrics[name] = float(m.group(1))
-
-    set_percent('gross_margin_increase_percent', 'gross_margin_percent')
-    set_percent('ebitda_per_load_increase_percent', 'ebitda_per_load_percent')
-    set_percent('cost_to_serve_reduction_percent', 'cost_to_serve_percent')
-    set_percent('ai_sourced_shipments_percent', 'ai_sourced_shipments_percent')
-    set_percent('ai_booked_loads_percent', 'ai_booked_loads_percent')
-
-    m = re.search(patterns['active_clients'], text, re.IGNORECASE)
-    if m and 'active_clients' not in metrics:
-        metrics['active_clients'] = int(m.group(1).replace(',', ''))
-
-    m = re.search(patterns['loads_month1'], text, re.IGNORECASE)
-    if m:
-        metrics['loads_month1'] = int(m.group(1).replace('+', ''))
-
-    m = re.search(patterns['headcount_hires'], text, re.IGNORECASE)
-    if m:
-        metrics['new_engineers_hired'] = int(m.group(1))
+    for name, pattern, builder, score, origin in leasy_table_patterns:
+        if name in metrics:
+            continue
+        m = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        if not m:
+            continue
+        _set_metric(metrics, confidence, name, builder(m), _line_snippet(text, m.start(), m.end()), score, origin)
 
     yoy_matches = re.findall(r'(\d+(?:\.\d+)?)%\s+YoY', text, re.IGNORECASE)
-    if yoy_matches:
+    if yoy_matches and 'yoy_percentages' not in metrics:
         metrics['yoy_percentages'] = [float(x) for x in yoy_matches]
+        confidence['yoy_percentages'] = {
+            'score': CONFIDENCE_LOW,
+            'origin': 'narrative_growth',
+            'source_snippet': ' '.join(re.findall(r'.{0,60}\d+(?:\.\d+)?%\s+YoY.{0,60}', text, re.IGNORECASE)[:2])[:400],
+        }
 
-    return metrics
+    return metrics, confidence
 
 
 def _section_text(body_text: str | None, heading: str, stop_headings: list[str] | None = None, window: int = 5000) -> str:
-    text = body_text or ''
+    text = _normalize_text(body_text)
     idx = text.lower().find(heading.lower())
     if idx == -1:
         return ''
@@ -327,28 +351,6 @@ def _section_text(body_text: str | None, heading: str, stop_headings: list[str] 
     return section
 
 
-def _extract_first_section(body_text: str | None, headings: list[str], stop_headings: list[str] | None = None) -> str:
-    for heading in headings:
-        section = _section_text(body_text, heading, stop_headings=stop_headings)
-        if section:
-            return section
-    return ''
-
-
-def extract_bullets_after_heading(body_text: str | None, heading: str, stop_headings: list[str] | None = None) -> list[str]:
-    section = _section_text(body_text, heading, stop_headings=stop_headings)
-    if not section:
-        return []
-    bullets = re.findall(r'\n\s*[-•]\s*(.+)', section)
-    cleaned = []
-    for bullet in bullets[:30]:
-        item = bullet.strip()
-        if item in {'-', '*', ''}:
-            continue
-        cleaned.append(item)
-    return cleaned[:12]
-
-
 def extract_section_paragraphs(body_text: str | None, heading: str, stop_headings: list[str] | None = None) -> list[str]:
     section = _section_text(body_text, heading, stop_headings=stop_headings)
     if not section:
@@ -361,17 +363,21 @@ def extract_section_paragraphs(body_text: str | None, heading: str, stop_heading
             if heading.lower() in line.lower():
                 started = True
             continue
-        if not line:
+        if not line or set(line) <= {'-'}:
             continue
         if line.startswith(('-', '•')):
-            out.append(line.lstrip('-• ').strip())
+            item = line.lstrip('-• ').strip()
+            if item and set(item) != {'-'}:
+                out.append(item)
             continue
         if len(line) > 40 and not re.match(r'^[A-Z][a-z]+:', line):
             out.append(line)
     deduped = []
     for line in out:
-        if line not in deduped:
-            deduped.append(line)
+        line = re.sub(r'\s+', ' ', line).strip()
+        if not line or line in deduped or set(line) <= {'-'}:
+            continue
+        deduped.append(line)
     return deduped[:12]
 
 
@@ -382,9 +388,9 @@ def extract_section_by_aliases(body_text: str | None, aliases: list[str], stop_h
             continue
         bullets = re.findall(r'\n\s*[-•]\s*(.+)', section)
         cleaned = []
-        for item in bullets[:30]:
-            item = item.strip()
-            if item and item not in {'-', '*'}:
+        for item in bullets[:40]:
+            item = re.sub(r'\s+', ' ', item).strip()
+            if item and item not in {'-', '*'} and set(item) != {'-'}:
                 cleaned.append(item)
         if cleaned:
             return cleaned[:12]
@@ -395,11 +401,11 @@ def extract_section_by_aliases(body_text: str | None, aliases: list[str], stop_h
 
 
 def summarize(body_text: str | None) -> str:
-    text = (body_text or '').strip()
+    text = _normalize_text(body_text)
     if not text:
         return ''
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    useful = [line for line in lines if len(line) > 40][:5]
+    useful = [line for line in lines if len(line) > 40 and 'Forwarded message' not in line][:5]
     return ' '.join(useful)[:1200]
 
 
@@ -407,12 +413,15 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     subject = raw.get('subject')
     body_text = raw.get('body_text') or ''
     attachment_text = raw.get('attachment_text') or ''
-    combined_text = '\n\n'.join(part for part in [body_text, attachment_text] if part)
+    cleaned_body_text = _strip_signature(_normalize_text(body_text))
+    cleaned_attachment_text = _normalize_text(attachment_text)
+    combined_text = '\n\n'.join(part for part in [cleaned_body_text, cleaned_attachment_text] if part)
     period = infer_period(subject, combined_text)
-    metrics = extract_metrics(combined_text)
+    metrics, confidence = extract_metrics(combined_text)
     stop_headings = [
         'How you can help', 'Runway', 'Learn more', 'Asks', 'Thanks and Asks',
-        'Fundraising & Financing', 'Product and Technology', 'Key Events', 'Team & Culture',
+        'Fundraising & Financing', 'Fundraising - Equity', 'Product and Technology', 'Key Events', 'Team & Culture',
+        'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing',
     ]
     highlights = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
     asks = extract_section_by_aliases(combined_text, SECTION_ALIASES['asks'], ['Runway', 'Learn more', 'Blurbs to facilitate connections'])
@@ -432,6 +441,7 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         'asks_json': asks,
         'risks_json': risks,
         'people_json': [],
+        'confidence_json': confidence,
         'source_path': raw.get('source_path'),
-        'parser_version': 'v2',
+        'parser_version': 'v3',
     }

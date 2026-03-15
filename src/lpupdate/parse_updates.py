@@ -11,6 +11,13 @@ MONTHS = {
 }
 
 
+SECTION_ALIASES = {
+    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?'],
+    'asks': ['How you can help', 'Asks', 'Thanks and Asks', '👍 How can you help?', '🙏 Asks'],
+    'risks': ['Risks', 'The Bad', '🔴 The Bad: Strategic Consolidation'],
+}
+
+
 def load_raw_message(path: str | Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text())
 
@@ -80,7 +87,7 @@ def infer_period(subject: str | None, body_text: str | None) -> dict[str, Any]:
 
 
 def _money_number(value: str) -> float:
-    cleaned = value.replace('$', '').replace(',', '').replace('+', '').replace('~', '').strip().lower()
+    cleaned = value.replace('US$', '').replace('$', '').replace(',', '').replace('+', '').replace('~', '').strip().lower()
     mult = 1
     if cleaned.endswith('mm'):
         mult = 1_000_000
@@ -95,14 +102,13 @@ def _money_number(value: str) -> float:
 
 
 def extract_metrics(body_text: str | None) -> dict[str, Any]:
-    text = body_text or ''
-    text = text.replace('*', '')
+    text = (body_text or '').replace('*', '')
     metrics: dict[str, Any] = {}
 
     patterns = {
-        'cash': r'Cash:\s*~?\$([\d,]+(?:\.\d+)?[mk]?)',
-        'monthly_cash_burn': r'Monthly cash burn.*?:\s*~?\$([\d,]+(?:\.\d+)?[mk]?)',
-        'runway_months': r'Implied runway.*?:\s*~?\s*(\d+(?:\.\d+)?)\s+months',
+        'cash': r'Cash(?: at (?:the end of the month|Bank))?\s*:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)',
+        'monthly_cash_burn': r'(?:Monthly|Net) cash burn.*?:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)',
+        'runway_months': r'(?:Implied runway|Cash Runway|Runway)\s*:\s*~?\s*(\d+(?:\.\d+)?)\s*(?:months?|x)?',
         'revenue_current': r'revenues? from \$([\d,.]+[mk]?) to \$([\d,.]+[mk]?)',
         'gross_profit_current': r'gross profit from ~?\$([\d,.]+[mk]?) to ~?\$([\d,.]+[mk]?)',
         'adj_ebitda_range': r'generating \$([\d,.]+[mk]?)\s*[-–]\s*([\d,.]+[mk]?) of adj\. EBITDA',
@@ -118,13 +124,93 @@ def extract_metrics(body_text: str | None) -> dict[str, Any]:
         'ai_sourced_shipments_percent': r'(\d+(?:\.\d+)?)% of shipments\s+had a bid sourced',
         'ai_booked_loads_percent': r'(\d+(?:\.\d+)?)% of all loads are fully sourced, negotiated, and booked',
         'active_clients': r'(\d+(?:,\d+)*)\s+active clients',
-        'loads_month1': r'(\d+(?:\+)?)[ ]+loads in month 1',
+        'loads_month1': r'(\d+(?:\+)?)\s+loads in month 1',
         'headcount_hires': r'We hired\s+(\d+)\s+new engineers',
     }
 
+    metric_aliases = {
+        'mrr': ('mrr', 'money', 'monthly'),
+        'arr': ('arr', 'money', 'annual'),
+        'annualized run rate': ('arr', 'money', 'annual'),
+        'q4 revenue generated': ('quarter_revenue', 'money', 'quarterly'),
+        'revenue to date': ('revenue_to_date', 'money', None),
+        'gross margin': ('gross_margin_percent', 'percent', None),
+        'growth run rate': ('growth_run_rate_percent', 'percent', None),
+        'customers & pilots': ('customers_and_pilots', 'int', None),
+        'customers and pilots': ('customers_and_pilots', 'int', None),
+        'countries active': ('countries_active', 'int', None),
+        'gmv managed': ('gmv_managed', 'money', None),
+        'documents processed': ('documents_processed', 'int', None),
+        'suppliers': ('suppliers', 'int', None),
+        'cash at the end of the month': ('cash', 'money', None),
+        'cash at bank': ('cash', 'money', None),
+        'net cash burn': ('monthly_cash_burn', 'money', 'monthly'),
+        'runway': ('runway_months', 'float', None),
+        'cash runway': ('runway_months', 'float', None),
+        'churn rate': ('churn_rate_percent', 'percent', None),
+        'cac inbound': ('cac_inbound', 'money', None),
+        'accumulated roas 2025': ('roas_2025', 'float', None),
+        'active clients': ('active_clients', 'int', None),
+        'impressions': ('impressions', 'int', None),
+        'video views': ('video_views', 'int', None),
+        'comments': ('comments_count', 'int', None),
+        'saves': ('saves_count', 'int', None),
+        'dm sends': ('dm_sends', 'int', None),
+    }
+
+    def parse_money(value: str) -> dict[str, Any] | None:
+        m = re.search(r'(?:US\$|\$)\s*([\d,]+(?:\.\d+)?\s*(?:mm|m|k)?)', value, re.IGNORECASE)
+        if not m:
+            return None
+        return {'value': _money_number(m.group(1).replace(' ', '')), 'currency': 'USD'}
+
+    def parse_percent(value: str) -> float | None:
+        m = re.search(r'([+-]?\d+(?:\.\d+)?)\s*%', value)
+        return float(m.group(1)) if m else None
+
+    def parse_int(value: str) -> int | None:
+        m = re.search(r'([\d,]+)', value)
+        return int(m.group(1).replace(',', '')) if m else None
+
+    def parse_float(value: str) -> float | None:
+        m = re.search(r'([\d,]+(?:\.\d+)?)', value)
+        return float(m.group(1).replace(',', '')) if m else None
+
+    def set_metric_from_alias(label: str, raw_value: str):
+        normalized = re.sub(r'\s+', ' ', label.strip().lower())
+        alias = metric_aliases.get(normalized)
+        if not alias or alias[0] in metrics:
+            return
+        key, kind, period = alias
+        if kind == 'money':
+            parsed = parse_money(raw_value)
+            if parsed:
+                if period:
+                    parsed['period'] = period
+                metrics[key] = parsed
+        elif kind == 'percent':
+            parsed = parse_percent(raw_value)
+            if parsed is not None:
+                metrics[key] = parsed
+        elif kind == 'int':
+            parsed = parse_int(raw_value)
+            if parsed is not None:
+                metrics[key] = parsed
+        elif kind == 'float':
+            parsed = parse_float(raw_value)
+            if parsed is not None:
+                metrics[key] = parsed
+
+    for line in text.splitlines():
+        cleaned = line.strip().lstrip('-•').strip()
+        if not cleaned or ':' not in cleaned:
+            continue
+        label, raw_value = cleaned.split(':', 1)
+        set_metric_from_alias(label, raw_value.strip())
+
     def set_money(name: str, match_key: str, period: str | None = None):
         m = re.search(patterns[match_key], text, re.IGNORECASE)
-        if m:
+        if m and name not in metrics:
             payload = {'value': _money_number(m.group(1)), 'currency': 'USD'}
             if period:
                 payload['period'] = period
@@ -137,7 +223,7 @@ def extract_metrics(body_text: str | None) -> dict[str, Any]:
     set_money('net_revenue', 'net_revenue', period='annual')
 
     m = re.search(patterns['runway_months'], text, re.IGNORECASE)
-    if m:
+    if m and 'runway_months' not in metrics:
         metrics['runway_months'] = float(m.group(1))
 
     m = re.search(patterns['revenue_current'], text, re.IGNORECASE)
@@ -195,7 +281,7 @@ def extract_metrics(body_text: str | None) -> dict[str, Any]:
 
     def set_percent(name: str, key: str):
         m = re.search(patterns[key], text, re.IGNORECASE)
-        if m:
+        if m and name not in metrics:
             metrics[name] = float(m.group(1))
 
     set_percent('gross_margin_increase_percent', 'gross_margin_percent')
@@ -205,7 +291,7 @@ def extract_metrics(body_text: str | None) -> dict[str, Any]:
     set_percent('ai_booked_loads_percent', 'ai_booked_loads_percent')
 
     m = re.search(patterns['active_clients'], text, re.IGNORECASE)
-    if m:
+    if m and 'active_clients' not in metrics:
         metrics['active_clients'] = int(m.group(1).replace(',', ''))
 
     m = re.search(patterns['loads_month1'], text, re.IGNORECASE)
@@ -241,13 +327,21 @@ def _section_text(body_text: str | None, heading: str, stop_headings: list[str] 
     return section
 
 
+def _extract_first_section(body_text: str | None, headings: list[str], stop_headings: list[str] | None = None) -> str:
+    for heading in headings:
+        section = _section_text(body_text, heading, stop_headings=stop_headings)
+        if section:
+            return section
+    return ''
+
+
 def extract_bullets_after_heading(body_text: str | None, heading: str, stop_headings: list[str] | None = None) -> list[str]:
     section = _section_text(body_text, heading, stop_headings=stop_headings)
     if not section:
         return []
     bullets = re.findall(r'\n\s*[-•]\s*(.+)', section)
     cleaned = []
-    for bullet in bullets[:20]:
+    for bullet in bullets[:30]:
         item = bullet.strip()
         if item in {'-', '*', ''}:
             continue
@@ -281,6 +375,25 @@ def extract_section_paragraphs(body_text: str | None, heading: str, stop_heading
     return deduped[:12]
 
 
+def extract_section_by_aliases(body_text: str | None, aliases: list[str], stop_headings: list[str]) -> list[str]:
+    for heading in aliases:
+        section = _section_text(body_text, heading, stop_headings=stop_headings)
+        if not section:
+            continue
+        bullets = re.findall(r'\n\s*[-•]\s*(.+)', section)
+        cleaned = []
+        for item in bullets[:30]:
+            item = item.strip()
+            if item and item not in {'-', '*'}:
+                cleaned.append(item)
+        if cleaned:
+            return cleaned[:12]
+        paragraphs = extract_section_paragraphs(body_text, heading, stop_headings=stop_headings)
+        if paragraphs:
+            return paragraphs[:12]
+    return []
+
+
 def summarize(body_text: str | None) -> str:
     text = (body_text or '').strip()
     if not text:
@@ -297,9 +410,13 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     combined_text = '\n\n'.join(part for part in [body_text, attachment_text] if part)
     period = infer_period(subject, combined_text)
     metrics = extract_metrics(combined_text)
-    highlights = extract_bullets_after_heading(combined_text, 'Key updates', stop_headings=['How you can help', 'Runway', 'Learn more'])
-    asks = extract_section_paragraphs(combined_text, 'How you can help', stop_headings=['Runway', 'Learn more'])
-    risks = extract_section_paragraphs(combined_text, 'Risks', stop_headings=['How you can help', 'Runway', 'Learn more'])
+    stop_headings = [
+        'How you can help', 'Runway', 'Learn more', 'Asks', 'Thanks and Asks',
+        'Fundraising & Financing', 'Product and Technology', 'Key Events', 'Team & Culture',
+    ]
+    highlights = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
+    asks = extract_section_by_aliases(combined_text, SECTION_ALIASES['asks'], ['Runway', 'Learn more', 'Blurbs to facilitate connections'])
+    risks = extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks'])
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
         'gmail_thread_id': raw.get('gmail_thread_id'),
@@ -316,5 +433,5 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         'risks_json': risks,
         'people_json': [],
         'source_path': raw.get('source_path'),
-        'parser_version': 'v1',
+        'parser_version': 'v2',
     }

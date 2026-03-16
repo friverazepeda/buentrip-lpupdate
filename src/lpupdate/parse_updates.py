@@ -12,9 +12,9 @@ MONTHS = {
 
 
 SECTION_ALIASES = {
-    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?', 'Investor Update – Q4'],
-    'asks': ['How you can help', 'Asks', 'Thanks and Asks', '👍 How can you help?', '🙏 Asks'],
-    'risks': ['Risks', 'The Bad', '🔴 The Bad: Strategic Consolidation'],
+    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?', 'Investor Update – Q4', '🏆 Achievements', '📈 Traction'],
+    'asks': ['How you can help', 'Asks', 'Thanks and Asks', '👍 How can you help?', '🙏 Asks', 'Blurbs to facilitate connections you can help us with'],
+    'risks': ['Risks', 'The Bad', '🔴 The Bad: Strategic Consolidation', '🏋 Challenges', 'Update on Fundraising / Lowlights and Focus Areas'],
 }
 
 
@@ -47,8 +47,11 @@ def _clean_company_name(value: str | None) -> str | None:
     name = value.strip(' –-|:')
     name = re.sub(r'\bQ[1-4][-\s]?20?\d{2,4}\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
     name = re.sub(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d{2}\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+    name = re.sub(r'\bInvestor/Internal Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
     name = re.sub(r'\bInvestor Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
     name = re.sub(r'\bMonthly Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+    name = re.sub(r'\bBOD Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+    name = re.sub(r'\[[^\]]+\]', '', name).strip(' –-|:')
     return name or None
 
 
@@ -56,12 +59,17 @@ def infer_company(subject: str | None, body_text: str | None) -> str | None:
     text = subject or ''
     patterns = [
         r'Fwd:\s*([^:]+):\s*Q\d',
+        r'Fwd:\s*([^|\-]+?)\s*[–\-:]\s*Investor/Internal Update',
         r'Fwd:\s*([^|\-]+?)\s*[–\-:]\s*Investor Update',
         r'Fwd:\s*([^|\-]+?)\s*[–\-:]\s*Monthly Update',
+        r'Fwd:\s*([^|\-]+?)\s*[–\-:]\s*BOD Update',
         r'Fwd:\s*([^|\-]+?)\s+Investor Update',
         r'Fwd:\s*([^|\-]+?)\s+Monthly Update',
+        r'Fwd:\s*([^|\-]+?)\s+BOD Update',
         r'([^|\-]+?)\s+Investor Update',
         r'([^|\-]+?)\s+Monthly Update',
+        r'([^|\-]+?)\s+BOD Update',
+        r'Fwd:\s*([^x]+?)\s+x\s+BTV\s+review',
     ]
     for pattern in patterns:
         m = re.search(pattern, text, re.IGNORECASE)
@@ -71,16 +79,37 @@ def infer_company(subject: str | None, body_text: str | None) -> str | None:
         m = re.search(r'Subject:\s*([^:]+):\s*Q\d', body_text, re.IGNORECASE)
         if m:
             return _clean_company_name(m.group(1))
+        m = re.search(r'From:\s+[^<]+<[^>]+@([a-z0-9-]+)\.', body_text, re.IGNORECASE)
+        if m:
+            return _clean_company_name(m.group(1).replace('-', ' ').title().replace(' ', ''))
     return None
 
 
 def infer_period(subject: str | None, body_text: str | None) -> dict[str, Any]:
     text = ' '.join(filter(None, [subject, body_text[:4000] if body_text else None]))
-    quarter_match = re.search(r'Q([1-4])[-\s]?(?:20)?(\d{2,4})', text, re.IGNORECASE)
+    quarter_match = re.search(r'\bQ([1-4])(?:[-\s]?(20\d{2}|\d{2}))\b', text, re.IGNORECASE)
     if quarter_match:
         q = int(quarter_match.group(1))
         y = quarter_match.group(2)
         year = int(y) if len(y) == 4 else 2000 + int(y)
+        return {
+            'report_period_label': f'Q{q} {year}',
+            'report_quarter': q,
+            'report_year': year,
+            'report_month': None,
+        }
+    quarter_subject_match = re.search(r'\bQ([1-4])\b', subject or '', re.IGNORECASE)
+    forward_date_match = re.search(r'Date:\s+\w+,\s+(' 
+        r'January|February|March|April|May|June|July|August|September|October|November|December' 
+        r'|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+\d{1,2},\s+(20\d{2})', body_text or '', re.IGNORECASE)
+    if quarter_subject_match and forward_date_match:
+        q = int(quarter_subject_match.group(1))
+        month_token = forward_date_match.group(1).lower()[:3]
+        month_map = {'jan':1,'feb':2,'mar':3,'apr':4,'may':5,'jun':6,'jul':7,'aug':8,'sep':9,'oct':10,'nov':11,'dec':12}
+        year = int(forward_date_match.group(2))
+        month_num = month_map[month_token]
+        if month_num <= 3:
+            year -= 1
         return {
             'report_period_label': f'Q{q} {year}',
             'report_quarter': q,
@@ -216,6 +245,13 @@ def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, An
         'new contracts': ('new_contracts', 'int', None, None),
         'pre-approved capital': ('pre_approved_capital', 'money', None, 'USD'),
         'drawn capital': ('drawn_capital', 'money', None, 'USD'),
+        'gross revenue': ('gross_revenue', 'money', None, 'USD'),
+        'ebitda': ('ebitda', 'money', None, 'USD'),
+        'december revenue': ('december_revenue', 'money', None, 'USD'),
+        'total revenue 2025': ('revenue_2025', 'money', None, 'USD'),
+        'gmv 2025': ('gmv_2025', 'money', None, 'USD'),
+        'cash on hand': ('cash', 'money', None, 'USD'),
+        'total quarterly revenue': ('quarter_revenue', 'money', 'quarterly', 'USD'),
     }
 
     def parse_money(raw_value: str, currency: str = 'USD', period: str | None = None) -> dict[str, Any] | None:
@@ -290,6 +326,21 @@ def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, An
         ('ai_booked_loads_percent', r'(\d+(?:\.\d+)?)% of (?:all loads|shipments) (?:are|were) fully sourced, negotiated, and booked', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'operational_case_study'),
         ('new_engineers_hired', r'We hired\s+(\d+)\s+new engineers', lambda m: int(m.group(1)), CONFIDENCE_MEDIUM, 'narrative_hiring'),
         ('active_clients', r'\b(\d+(?:,\d+)*)\s+active clients\b', lambda m: int(m.group(1).replace(',', '')), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('gross_revenue', r'Gross Revenue:\s*(?:[A-Z]{3}\d{2}\s*:)?\s*([\d.]+[mk]?)\s*USD', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('ebitda', r'EBITDA\s*(?:[A-Z]{3}\d{2})?\s*([\d.]+[mk]?)\s*USD', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('mrr', r'MRR of\s*([\d.]+[mk]?)\s*USD', lambda m: _parse_money_value(m.group(1), period='monthly'), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('december_revenue', r'December Revenue:\s*\$([\d,]+(?:\.\d+)?)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('revenue_2025', r'Total Revenue 2025:\s*\$([\d,.]+[mk]?)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('gmv_2025', r'GMV 2025:\s*\$([\d,.]+[mk]?)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('arr', r'Total ARR EoQ:\s*\$([\d,.]+[mk]?)\s*USD', lambda m: _parse_money_value(m.group(1), period='annual'), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('quarter_revenue', r'Total Quarterly Revenue:\s*\$([\d,.]+[mk]?)\s*USD', lambda m: _parse_money_value(m.group(1), period='quarterly'), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('runway_months', r'Runway:\s*(\d+(?:\.\d+)?)\s*months', lambda m: float(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('burn_multiple', r'Burn Multiple:\s*(\d+(?:\.\d+)?)', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'headline_kpi'),
+        ('borrowers_enabled_monthly', r'Total Unique Borrowers Enabled / Month:\s*([\d,.]+[mk]?)', lambda m: int(_money_number(m.group(1))), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('ndr_percent', r'\b(\d+(?:\.\d+)?)%\s*NDR\b', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'headline_kpi'),
+        ('pmf_score_percent', r'Sean Ellis PMF survey.*?achieved a\s*(\d+(?:\.\d+)?)%\s*score', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'headline_kpi'),
+        ('bookings', r'\$([\d,.]+[mk]?)\s+in bookings', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'headline_kpi'),
+        ('sales_demo_conversion_percent', r'(\d+(?:\.\d+)?)% of leads who see a live demo', lambda m: float(m.group(1)), CONFIDENCE_MEDIUM, 'headline_kpi'),
     ]
 
     for name, pattern, builder, score, origin in regex_specs:
@@ -421,7 +472,8 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     stop_headings = [
         'How you can help', 'Runway', 'Learn more', 'Asks', 'Thanks and Asks',
         'Fundraising & Financing', 'Fundraising - Equity', 'Product and Technology', 'Key Events', 'Team & Culture',
-        'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing',
+        'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing', '🏋 Challenges', '📈 KPIs',
+        'Update on Fundraising / Lowlights and Focus Areas', 'Blurbs to facilitate connections you can help us with',
     ]
     highlights = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
     asks = extract_section_by_aliases(combined_text, SECTION_ALIASES['asks'], ['Runway', 'Learn more', 'Blurbs to facilitate connections'])

@@ -160,6 +160,37 @@ def _normalize_text(text: str | None) -> str:
     return value.strip()
 
 
+def _cleanup_section_text(text: str) -> str:
+    value = _normalize_text(text)
+    value = re.sub(r'<https?://[^>]+>', '', value)
+    value = re.sub(r'https?://\S+', '', value)
+    value = re.sub(r'\[image:[^\]]+\]', '', value, flags=re.IGNORECASE)
+    value = re.sub(r'^>{2,}.*$', '', value, flags=re.MULTILINE)
+    value = re.sub(r'^\s*Demonstração\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\s*Sent via Paperstreet.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\s*Paperstreet ©.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\s*No longer wish to hear from us\?.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\s*Calendly link\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\s*Schedule time with me!?\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\s*SPA:\s*$', '', value, flags=re.MULTILINE)
+    value = re.sub(r'^\s*ENG:\s*$', '', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?Confidential\..*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?This update and its contents are confidential.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?Blurbs to facilitate connections you can help us with:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?Update on Fundraising / Lowlights and Focus Areas:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?🏋 Challenges\*?$', 'Risks', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?📈 Looking Ahead\*?$', 'How you can help', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?📈 Traction\*?$', 'Highlights', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?🏆 Achievements\*?$', 'Highlights', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?Highlights:?\*?$', 'Highlights', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?Risks:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?How you can help:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^\*?Asks:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
+    value = re.sub(r'^[*_\-\s]{20,}$', '', value, flags=re.MULTILINE)
+    value = re.sub(r'\n{3,}', '\n\n', value)
+    return value.strip()
+
+
 def _strip_signature(text: str) -> str:
     patterns = [
         r'\n--\s*\n.*$',
@@ -172,7 +203,7 @@ def _strip_signature(text: str) -> str:
 
 
 def _relevant_metric_text(text: str) -> str:
-    return _normalize_text(text)
+    return _cleanup_section_text(text)
 
 
 def _line_snippet(text: str, start: int, end: int, window: int = 220) -> str:
@@ -385,7 +416,7 @@ def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, An
 
 
 def _section_text(body_text: str | None, heading: str, stop_headings: list[str] | None = None, window: int = 5000) -> str:
-    text = _normalize_text(body_text)
+    text = _cleanup_section_text(body_text or '')
     idx = text.lower().find(heading.lower())
     if idx == -1:
         return ''
@@ -428,6 +459,12 @@ def extract_section_paragraphs(body_text: str | None, heading: str, stop_heading
         line = re.sub(r'\s+', ' ', line).strip()
         if not line or line in deduped or set(line) <= {'-'}:
             continue
+        if len(line) < 12:
+            continue
+        if line.lower() in {'highlights', 'risks', 'how you can help'}:
+            continue
+        if line.startswith('http') or line.startswith('<http'):
+            continue
         deduped.append(line)
     return deduped[:12]
 
@@ -441,8 +478,13 @@ def extract_section_by_aliases(body_text: str | None, aliases: list[str], stop_h
         cleaned = []
         for item in bullets[:40]:
             item = re.sub(r'\s+', ' ', item).strip()
-            if item and item not in {'-', '*'} and set(item) != {'-'}:
-                cleaned.append(item)
+            if not item or item in {'-', '*'} or set(item) == {'-'}:
+                continue
+            if len(item) < 12:
+                continue
+            if item.startswith('http') or item.startswith('<http'):
+                continue
+            cleaned.append(item)
         if cleaned:
             return cleaned[:12]
         paragraphs = extract_section_paragraphs(body_text, heading, stop_headings=stop_headings)
@@ -452,7 +494,7 @@ def extract_section_by_aliases(body_text: str | None, aliases: list[str], stop_h
 
 
 def summarize(body_text: str | None) -> str:
-    text = _normalize_text(body_text)
+    text = _cleanup_section_text(body_text or '')
     if not text:
         return ''
     lines = [line.strip() for line in text.splitlines() if line.strip()]
@@ -460,12 +502,39 @@ def summarize(body_text: str | None) -> str:
     return ' '.join(useful)[:1200]
 
 
+def _filter_section_items(items: list[str], kind: str) -> list[str]:
+    filtered: list[str] = []
+    banned_substrings = {
+        'asks': ['provides ai-driven lending infrastructure', 'paperstreet', 'all rights reserved', 'no longer wish to hear from us'],
+        'risks': ['audit report', 'auditor:', 'management\'s responsibility', 'financial amounts are expressed', 'timely and complete provision'],
+    }
+    for item in items:
+        text = re.sub(r'\s+', ' ', item).strip(' -•')
+        if not text or len(text) < 12:
+            continue
+        lower = text.lower()
+        if lower in {'highlights', 'risks', 'how you can help'}:
+            continue
+        if text in filtered:
+            continue
+        if kind == 'asks' and ('calendly' in lower or 'book with andrés' in lower or 'book with andres' in lower):
+            continue
+        if kind == 'asks' and lower.startswith('altscore investor/internal update'):
+            continue
+        if kind == 'risks' and any(token in lower for token in ['auditor', 'audit report', 'management\'s responsibility', 'documentary support']):
+            continue
+        if any(token in lower for token in banned_substrings.get(kind, [])):
+            continue
+        filtered.append(text)
+    return filtered[:12]
+
+
 def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     subject = raw.get('subject')
     body_text = raw.get('body_text') or ''
     attachment_text = raw.get('attachment_text') or ''
-    cleaned_body_text = _strip_signature(_normalize_text(body_text))
-    cleaned_attachment_text = _normalize_text(attachment_text)
+    cleaned_body_text = _strip_signature(_cleanup_section_text(body_text))
+    cleaned_attachment_text = _cleanup_section_text(attachment_text)
     combined_text = '\n\n'.join(part for part in [cleaned_body_text, cleaned_attachment_text] if part)
     period = infer_period(subject, combined_text)
     metrics, confidence = extract_metrics(combined_text)
@@ -475,9 +544,9 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing', '🏋 Challenges', '📈 KPIs',
         'Update on Fundraising / Lowlights and Focus Areas', 'Blurbs to facilitate connections you can help us with',
     ]
-    highlights = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
-    asks = extract_section_by_aliases(combined_text, SECTION_ALIASES['asks'], ['Runway', 'Learn more', 'Blurbs to facilitate connections'])
-    risks = extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks'])
+    highlights = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings), 'highlights')
+    asks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['asks'], ['Runway', 'Learn more', 'Blurbs to facilitate connections', 'Highlights', 'Risks', 'Closing Thoughts']), 'asks')
+    risks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks', 'Highlights', '📈 KPIs', '2026 Overall Targets', 'Closing Thoughts']), 'risks')
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
         'gmail_thread_id': raw.get('gmail_thread_id'),

@@ -26,7 +26,10 @@ class Settings:
     google_oauth_token_file: str | None
     gmail_query: str
     database_url: str | None
-
+    parse_provider: str
+    bem_api_key: str | None
+    bem_api_url: str | None
+    bem_timeout_seconds: int
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -35,4 +38,8 @@ class Settings:
             google_oauth_token_file=os.getenv("GOOGLE_OAUTH_TOKEN_FILE"),
             gmail_query=os.getenv("GMAIL_QUERY", 'label:"Investor/Quarterly"'),
             database_url=os.getenv("LPUPDATE_DATABASE_URL"),
+            parse_provider=os.getenv("LPUPDATE_PARSE_PROVIDER", "rules"),
+            bem_api_key=os.getenv("BEM_API_KEY"),
+            bem_api_url=os.getenv("BEM_API_URL"),
+            bem_timeout_seconds=int(os.getenv("LPUPDATE_BEM_TIMEOUT_SECONDS", "60")),
         )

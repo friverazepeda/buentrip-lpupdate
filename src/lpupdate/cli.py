@@ -14,8 +14,8 @@ from .gmail import (
 )
 from .db import apply_schema, connect, get_company_metrics, get_company_updates, get_update, list_companies, list_updates, upsert_company, upsert_email_message, upsert_quarterly_update
 from .ingest import normalize_message, save_attachment
-from .parse_updates import load_raw_message, normalize_update
-from .pdf_extract import extract_pdf_text
+from .parse_updates import load_raw_message
+from .parsers import build_source_bundle, get_parse_provider
 from .reporting import generate_report_site
 from .schema import SCHEMA_SQL
 from .store import ensure_data_dir, write_json
@@ -28,6 +28,10 @@ def cmd_doctor(_: argparse.Namespace) -> int:
         "google_oauth_token_file": settings.google_oauth_token_file,
         "gmail_query": settings.gmail_query,
         "database_url_present": bool(settings.database_url),
+        "parse_provider": settings.parse_provider,
+        "bem_api_url": settings.bem_api_url,
+        "bem_api_key_present": bool(settings.bem_api_key),
+        "bem_timeout_seconds": settings.bem_timeout_seconds,
     }
     print(json.dumps(payload, indent=2))
     return 0
@@ -142,38 +146,34 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
 
 
 def cmd_parse_raw(args: argparse.Namespace) -> int:
+    settings = Settings.from_env()
+    provider = get_parse_provider(settings)
     raw_dir = ensure_data_dir("data/raw_gmail")
     out_dir = ensure_data_dir("data/parsed_updates")
+    provider_out_dir = ensure_data_dir(f"data/provider_outputs/{provider.name}")
     raw_files = sorted(raw_dir.glob("*.json"))[: args.limit]
     parsed: list[dict] = []
     for path in raw_files:
         raw = load_raw_message(path)
         raw['source_path'] = str(path)
-        attachment_texts = []
-        for attachment in raw.get('attachments', []) or []:
-            storage_path = attachment.get('storage_path')
-            mime_type = (attachment.get('mime_type') or '').lower()
-            if not storage_path:
-                continue
-            if mime_type == 'application/pdf' or str(storage_path).lower().endswith('.pdf'):
-                try:
-                    text = extract_pdf_text(storage_path)
-                except Exception:
-                    text = ''
-                if text:
-                    attachment_texts.append(text)
-        raw['attachment_text'] = '\n\n'.join(attachment_texts)
-        update = normalize_update(raw)
-        update['attachment_count'] = len(raw.get('attachments', []) or [])
-        update['attachment_text_present'] = bool(raw.get('attachment_text'))
+        bundle = build_source_bundle(raw)
+        raw['attachment_text'] = bundle.attachment_text
+        result = provider.parse(raw)
+        update = result.update
+        update['attachment_count'] = bundle.attachment_count
+        update['attachment_text_present'] = bundle.attachment_text_present
+        update['parse_provider'] = provider.name
         write_json(out_dir / path.name, update)
+        if result.provider_output is not None:
+            write_json(provider_out_dir / path.name, result.provider_output)
         parsed.append({
             'gmail_message_id': update['gmail_message_id'],
             'company_name': update['company_name'],
             'report_period_label': update['report_period_label'],
+            'parser_provider': update.get('parser_provider', provider.name),
             'path': str(out_dir / path.name),
         })
-    print(json.dumps({'count': len(parsed), 'updates': parsed}, indent=2))
+    print(json.dumps({'count': len(parsed), 'provider': provider.name, 'updates': parsed}, indent=2))
     return 0
 
 

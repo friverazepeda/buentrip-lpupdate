@@ -20,6 +20,11 @@ A development-stage pipeline for ingesting startup investor updates from Gmail, 
 - email body text / HTML
 - PDF attachments
 
+### Parsing providers
+- `rules` — current deterministic parser in `src/lpupdate/parse_updates.py`
+- `bem` — remote structured extraction provider scaffold
+- `hybrid` — prefers bem output, falls back to/merges with rules
+
 ### Local storage
 - raw emails: `data/raw_gmail/`
 - attachments: `data/attachments/`
@@ -63,6 +68,10 @@ GOOGLE_OAUTH_CLIENT_SECRET_FILE=/home/frivera/.config/gws/client_secret.json
 GOOGLE_OAUTH_TOKEN_FILE=/home/frivera/.config/gws/gmail_token.json
 GMAIL_QUERY=label:"Investor/Quarterly"
 LPUPDATE_DATABASE_URL=postgresql://lpupdate:lpupdate_dev_password@localhost:5432/lpupdate
+LPUPDATE_PARSE_PROVIDER=rules
+BEM_API_URL=https://api.bem.ai/YOUR_WORKFLOW_ENDPOINT
+BEM_API_KEY=your_bem_api_key
+LPUPDATE_BEM_TIMEOUT_SECONDS=60
 ```
 
 ## CLI commands
@@ -89,6 +98,14 @@ PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli <comm
 ... -m lpupdate.cli parse-raw --limit 20
 ... -m lpupdate.cli db-apply
 ... -m lpupdate.cli sync-postgres --limit 20
+```
+
+Provider selection currently happens through `.env`:
+
+```bash
+LPUPDATE_PARSE_PROVIDER=rules   # deterministic local parser
+LPUPDATE_PARSE_PROVIDER=bem     # remote bem extraction scaffold
+LPUPDATE_PARSE_PROVIDER=hybrid  # bem first, rules fallback/merge
 ```
 
 ### Inspection

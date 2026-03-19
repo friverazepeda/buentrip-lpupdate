@@ -13,11 +13,16 @@
     .vehicle-fund { background: #e8f1ff; color: #16324f; }
     .vehicle-spv { background: #eef8ea; color: #245c2a; }
     .summary { color: #4b5563; max-width: 900px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0 8px; }
+    .summary-card { border: 1px solid #dbe4f0; border-radius: 12px; padding: 16px; background: #f8fbff; }
+    .summary-card-label { font-size: 0.9em; color: #526172; margin-bottom: 6px; }
+    .summary-card-value { font-size: 1.8em; font-weight: 700; color: #16324f; }
   </style>
 </head>
 <body>
   <h1>lpupdate — Latest Startup Reports</h1>
   <p class="summary">One page per startup based on the latest parsed investor update. Startups are grouped by investment vehicle so you can quickly review Fund I, Fund II, and SPV coverage.</p>
+  <section class="summary-grid"><div class="summary-card"><div class="summary-card-label">Total startups</div><div class="summary-card-value">12</div></div><div class="summary-card"><div class="summary-card-label">Fund I startups</div><div class="summary-card-value">5</div></div><div class="summary-card"><div class="summary-card-label">Fund II startups</div><div class="summary-card-value">7</div></div><div class="summary-card"><div class="summary-card-label">SPV-backed startups</div><div class="summary-card-value">1</div></div><div class="summary-card"><div class="summary-card-label">Unmapped startups</div><div class="summary-card-value">0</div></div></section>
   <section class="vehicle-section">
   <h2>BuenTrip Ventures Fund I</h2>
   <table>

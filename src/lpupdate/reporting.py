@@ -144,6 +144,15 @@ def render_company_page(record: dict[str, Any]) -> str:
 '''
 
 
+def render_summary_cards(cards: list[tuple[str, int]]) -> str:
+    parts = []
+    for label, value in cards:
+        parts.append(
+            f'''<div class="summary-card"><div class="summary-card-label">{html.escape(label)}</div><div class="summary-card-value">{value}</div></div>'''
+        )
+    return '<section class="summary-grid">' + ''.join(parts) + '</section>'
+
+
 def render_vehicle_group(title: str, records: list[dict[str, Any]]) -> str:
     if not records:
         return ''
@@ -182,6 +191,14 @@ def render_index(records: list[dict[str, Any]]) -> str:
     spv_records = [rec for rec in enriched if any(company_vehicle_type(vehicle) == 'spv' for vehicle in (rec.get('vehicles_json') or []))]
     unmapped_records = [rec for rec in enriched if not (rec.get('vehicles_json') or [])]
 
+    summary_cards = [
+        ('Total startups', len(enriched)),
+        ('Fund I startups', len(fund_i_records)),
+        ('Fund II startups', len(fund_ii_records)),
+        ('SPV-backed startups', len(spv_records)),
+        ('Unmapped startups', len(unmapped_records)),
+    ]
+
     return f'''<!doctype html>
 <html>
 <head>
@@ -197,11 +214,16 @@ def render_index(records: list[dict[str, Any]]) -> str:
     .vehicle-fund {{ background: #e8f1ff; color: #16324f; }}
     .vehicle-spv {{ background: #eef8ea; color: #245c2a; }}
     .summary {{ color: #4b5563; max-width: 900px; }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0 8px; }}
+    .summary-card {{ border: 1px solid #dbe4f0; border-radius: 12px; padding: 16px; background: #f8fbff; }}
+    .summary-card-label {{ font-size: 0.9em; color: #526172; margin-bottom: 6px; }}
+    .summary-card-value {{ font-size: 1.8em; font-weight: 700; color: #16324f; }}
   </style>
 </head>
 <body>
   <h1>lpupdate — Latest Startup Reports</h1>
   <p class="summary">One page per startup based on the latest parsed investor update. Startups are grouped by investment vehicle so you can quickly review Fund I, Fund II, and SPV coverage.</p>
+  {render_summary_cards(summary_cards)}
   {render_vehicle_group('BuenTrip Ventures Fund I', fund_i_records)}
   {render_vehicle_group('BuenTrip Ventures Fund II', fund_ii_records)}
   {render_vehicle_group('SPVs', spv_records)}

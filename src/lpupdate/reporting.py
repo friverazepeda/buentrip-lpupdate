@@ -3,6 +3,8 @@ from __future__ import annotations
 import html
 import json
 import re
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
@@ -74,7 +76,37 @@ def render_vehicle_badges(vehicles: list[str]) -> str:
     return ''.join(items)
 
 
-def render_company_page(record: dict[str, Any]) -> str:
+def received_at_sort_key(value: Any) -> datetime:
+    text = str(value or '').strip()
+    if not text:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        parsed = parsedate_to_datetime(text)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except Exception:
+        return datetime.min.replace(tzinfo=timezone.utc)
+
+
+def sort_records_desc(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(
+        records,
+        key=lambda r: (
+            received_at_sort_key(r.get('received_at')),
+            str(r.get('gmail_message_id') or ''),
+        ),
+        reverse=True,
+    )
+
+
+def report_filename(record: dict[str, Any]) -> str:
+    message_id = slugify(str(record.get('gmail_message_id') or 'unknown-message'))
+    period = slugify(str(record.get('report_period_label') or 'report'))
+    return f'{message_id}-{period}.html'
+
+
+def render_report_page(record: dict[str, Any], company_page_href: str = '../index.html') -> str:
     company = record.get('company_name') or 'Unknown'
     summary = record.get('summary') or 'No summary available.'
     metrics = record.get('metrics_json') or {}
@@ -86,7 +118,7 @@ def render_company_page(record: dict[str, Any]) -> str:
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{html.escape(company)} — lpupdate report</title>
+  <title>{html.escape(company)} — {html.escape(str(record.get('report_period_label') or 'Report'))}</title>
   <style>
     body {{ font-family: Arial, sans-serif; margin: 40px; max-width: 900px; line-height: 1.5; }}
     h1, h2 {{ color: #16324f; }}
@@ -102,10 +134,10 @@ def render_company_page(record: dict[str, Any]) -> str:
   </style>
 </head>
 <body>
-  <p><a href="../index.html">← Back to startup index</a></p>
+  <p><a href="{html.escape(company_page_href)}">← Back to {html.escape(company)} reports</a></p>
   <h1>{html.escape(company)}</h1>
   <div class="meta">
-    <div><strong>Latest report period:</strong> {html.escape(str(record.get('report_period_label') or 'Unknown'))}</div>
+    <div><strong>Report period:</strong> {html.escape(str(record.get('report_period_label') or 'Unknown'))}</div>
     <div><strong>Received at:</strong> {html.escape(str(record.get('received_at') or 'Unknown'))}</div>
     <div><strong>Subject:</strong> {html.escape(str(record.get('subject') or 'Unknown'))}</div>
     <div><strong>Gmail message id:</strong> {html.escape(str(record.get('gmail_message_id') or 'Unknown'))}</div>
@@ -137,8 +169,66 @@ def render_company_page(record: dict[str, Any]) -> str:
     <h2>Risks</h2>
     {render_list(risks)}
   </div>
+</body>
+</html>
+'''
 
-  <p class="small">Generated from the latest parsed update in lpupdate.</p>
+
+def render_company_page(company: str, records: list[dict[str, Any]]) -> str:
+    ordered = sort_records_desc(records)
+    latest = ordered[0]
+    vehicles = latest.get('vehicles_json') or vehicles_for_company(company)
+    rows = []
+    for rec in ordered:
+        rows.append(
+            f"<tr>"
+            f"<td><a href='{html.escape(report_filename(rec))}'>{html.escape(str(rec.get('report_period_label') or 'Unknown'))}</a></td>"
+            f"<td>{html.escape(str(rec.get('received_at') or 'Unknown'))}</td>"
+            f"<td>{html.escape(str(rec.get('subject') or 'Unknown'))}</td>"
+            f"<td>{html.escape(str(rec.get('gmail_message_id') or 'Unknown'))}</td>"
+            f"</tr>"
+        )
+    return f'''<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{html.escape(company)} — lpupdate reports</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; line-height: 1.5; }}
+    h1, h2 {{ color: #16324f; }}
+    .meta {{ color: #555; margin-bottom: 24px; }}
+    .card {{ border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 18px 0; }}
+    .small {{ font-size: 0.92em; color: #666; }}
+    .vehicle-pill {{ display: inline-block; margin: 4px 8px 0 0; padding: 6px 10px; border-radius: 999px; font-size: 0.92em; font-weight: 600; }}
+    .vehicle-fund {{ background: #e8f1ff; color: #16324f; }}
+    .vehicle-spv {{ background: #eef8ea; color: #245c2a; }}
+    table {{ width: 100%; border-collapse: collapse; margin-top: 12px; }}
+    th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }}
+    th {{ background: #f3f6fb; }}
+  </style>
+</head>
+<body>
+  <p><a href="../index.html">← Back to startup index</a></p>
+  <h1>{html.escape(company)}</h1>
+  <div class="meta">
+    <div><strong>Total parsed reports:</strong> {len(ordered)}</div>
+    <div><strong>Latest report period:</strong> {html.escape(str(latest.get('report_period_label') or 'Unknown'))}</div>
+    <div><strong>Latest received at:</strong> {html.escape(str(latest.get('received_at') or 'Unknown'))}</div>
+    <div><strong>Investment vehicles:</strong> {render_vehicle_badges(vehicles)}</div>
+  </div>
+
+  <div class="card">
+    <h2>Reports</h2>
+    <p class="small">Newest first. Click any row's period to open the full report.</p>
+    <table>
+      <thead>
+        <tr><th>Report Period</th><th>Received At</th><th>Subject</th><th>Gmail Message ID</th></tr>
+      </thead>
+      <tbody>
+        {''.join(rows)}
+      </tbody>
+    </table>
+  </div>
 </body>
 </html>
 '''
@@ -162,7 +252,7 @@ def render_vehicle_group(title: str, records: list[dict[str, Any]]) -> str:
         slug = slugify(company)
         vehicles = rec.get('vehicles_json') or vehicles_for_company(company)
         rows.append(
-            f"<tr><td><a href='startups/{slug}.html'>{html.escape(company)}</a></td>"
+            f"<tr><td><a href='startups/{slug}/index.html'>{html.escape(company)}</a></td>"
             f"<td>{render_vehicle_badges(vehicles)}</td>"
             f"<td>{html.escape(str(rec.get('report_period_label') or 'Unknown'))}</td>"
             f"<td>{html.escape(str(rec.get('received_at') or 'Unknown'))}</td>"
@@ -222,7 +312,7 @@ def render_index(records: list[dict[str, Any]]) -> str:
 </head>
 <body>
   <h1>lpupdate — Latest Startup Reports</h1>
-  <p class="summary">One page per startup based on the latest parsed investor update. Startups are grouped by investment vehicle so you can quickly review Fund I, Fund II, and SPV coverage.</p>
+  <p class="summary">Click a startup to open its report history. Each startup page lists every parsed investor update in reverse chronological order, and each report opens on its own detail page.</p>
   {render_summary_cards(summary_cards)}
   {render_vehicle_group('BuenTrip Ventures Fund I', fund_i_records)}
   {render_vehicle_group('BuenTrip Ventures Fund II', fund_ii_records)}
@@ -238,9 +328,17 @@ def latest_by_company(parsed_records: list[dict[str, Any]]) -> list[dict[str, An
     for rec in parsed_records:
         company = rec.get('company_name') or 'Unknown'
         prev = latest.get(company)
-        if prev is None or str(rec.get('received_at') or '') > str(prev.get('received_at') or ''):
+        if prev is None or received_at_sort_key(rec.get('received_at')) > received_at_sort_key(prev.get('received_at')):
             latest[company] = rec
     return list(latest.values())
+
+
+def records_by_company(parsed_records: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for rec in parsed_records:
+        company = rec.get('company_name') or 'Unknown'
+        grouped.setdefault(company, []).append(rec)
+    return grouped
 
 
 def generate_report_site(parsed_dir: str | Path, out_dir: str | Path) -> dict[str, Any]:
@@ -251,14 +349,22 @@ def generate_report_site(parsed_dir: str | Path, out_dir: str | Path) -> dict[st
 
     parsed_records = [json.loads(p.read_text()) for p in sorted(parsed_dir.glob('*.json'))]
     latest_records = latest_by_company(parsed_records)
+    grouped_records = records_by_company(parsed_records)
 
-    for rec in latest_records:
-        slug = slugify(rec.get('company_name') or 'unknown')
-        (startup_dir / f'{slug}.html').write_text(render_company_page(rec))
+    report_count = 0
+    for company, records in grouped_records.items():
+        slug = slugify(company)
+        company_dir = startup_dir / slug
+        company_dir.mkdir(parents=True, exist_ok=True)
+        (company_dir / 'index.html').write_text(render_company_page(company, records))
+        for rec in records:
+            (company_dir / report_filename(rec)).write_text(render_report_page(rec))
+            report_count += 1
 
     (out_dir / 'index.html').write_text(render_index(latest_records))
     return {
         'company_count': len(latest_records),
+        'report_count': report_count,
         'index_path': str(out_dir / 'index.html'),
         'startup_dir': str(startup_dir),
     }

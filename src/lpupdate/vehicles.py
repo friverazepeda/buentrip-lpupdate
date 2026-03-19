@@ -43,13 +43,29 @@ COMPANY_VEHICLES: Final[dict[str, list[str]]] = {
 }
 
 CANONICAL_COMPANY_NAMES: Final[dict[str, str]] = {name.casefold(): name for name in COMPANY_VEHICLES}
+COMPANY_ALIASES: Final[dict[str, str]] = {
+    'altscore': 'Altscore',
+    'constructai': 'Construct AI',
+    'construct ai': 'Construct AI',
+    'leasy': 'Leasy',
+    'mox': 'MOX',
+    'neta ai': 'Neta AI',
+    'netaai': 'Neta AI',
+    'paymon': 'Paymon',
+    'synthera ai': 'Synthera AI',
+    'syntheraai': 'Synthera AI',
+    'xmonitoring': 'Xmonitoring',
+}
 
 
 def canonicalize_company_name(company_name: str | None) -> str | None:
     if not company_name:
         return None
     cleaned = ' '.join(str(company_name).split()).strip()
-    return CANONICAL_COMPANY_NAMES.get(cleaned.casefold(), cleaned)
+    lowered = cleaned.casefold()
+    if lowered in COMPANY_ALIASES:
+        return COMPANY_ALIASES[lowered]
+    return CANONICAL_COMPANY_NAMES.get(lowered, cleaned)
 
 
 def vehicles_for_company(company_name: str | None) -> list[str]:

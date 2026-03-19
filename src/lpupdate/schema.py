@@ -3,8 +3,12 @@ CREATE TABLE IF NOT EXISTS companies (
   id BIGSERIAL PRIMARY KEY,
   canonical_name TEXT NOT NULL UNIQUE,
   aliases JSONB NOT NULL DEFAULT '[]'::jsonb,
+  vehicles_json JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE companies
+  ADD COLUMN IF NOT EXISTS vehicles_json JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 CREATE TABLE IF NOT EXISTS email_messages (
   id BIGSERIAL PRIMARY KEY,

@@ -6,6 +6,7 @@ from typing import Any
 import psycopg
 
 from .schema import SCHEMA_SQL
+from .vehicles import canonicalize_company_name, vehicles_for_company
 
 
 def connect(database_url: str):
@@ -20,15 +21,19 @@ def apply_schema(database_url: str) -> None:
 
 
 def upsert_company(cur, canonical_name: str) -> int:
+    canonical_name = canonicalize_company_name(canonical_name) or canonical_name
+    vehicles = vehicles_for_company(canonical_name)
     cur.execute(
         """
-        INSERT INTO companies (canonical_name)
-        VALUES (%s)
+        INSERT INTO companies (canonical_name, vehicles_json)
+        VALUES (%s, %s::jsonb)
         ON CONFLICT (canonical_name)
-        DO UPDATE SET canonical_name = EXCLUDED.canonical_name
+        DO UPDATE SET
+          canonical_name = EXCLUDED.canonical_name,
+          vehicles_json = EXCLUDED.vehicles_json
         RETURNING id
         """,
-        (canonical_name,),
+        (canonical_name, json.dumps(vehicles)),
     )
     return cur.fetchone()[0]
 
@@ -82,6 +87,7 @@ def list_updates(database_url: str, limit: int = 20) -> list[dict[str, Any]]:
                 SELECT
                   q.id,
                   c.canonical_name AS company_name,
+                  c.vehicles_json,
                   q.report_period_label,
                   q.received_at,
                   q.summary,
@@ -104,6 +110,7 @@ def get_update(database_url: str, update_id: int) -> dict[str, Any] | None:
                 SELECT
                   q.id,
                   c.canonical_name AS company_name,
+                  c.vehicles_json,
                   q.report_period_label,
                   q.report_quarter,
                   q.report_year,
@@ -135,11 +142,12 @@ def list_companies(database_url: str) -> list[dict[str, Any]]:
                 SELECT
                   c.id,
                   c.canonical_name,
+                  c.vehicles_json,
                   COUNT(q.id) AS update_count,
                   MAX(q.received_at) AS latest_received_at
                 FROM companies c
                 LEFT JOIN quarterly_updates q ON q.company_id = c.id
-                GROUP BY c.id, c.canonical_name
+                GROUP BY c.id, c.canonical_name, c.vehicles_json
                 ORDER BY c.canonical_name ASC
                 """
             )
@@ -154,6 +162,7 @@ def get_company_updates(database_url: str, company_name: str) -> list[dict[str, 
                 SELECT
                   q.id,
                   c.canonical_name AS company_name,
+                  c.vehicles_json,
                   q.report_period_label,
                   q.report_quarter,
                   q.report_year,
@@ -182,6 +191,7 @@ def get_company_metrics(database_url: str, company_name: str) -> list[dict[str, 
                 """
                 SELECT
                   c.canonical_name AS company_name,
+                  c.vehicles_json,
                   q.id AS update_id,
                   q.report_period_label,
                   q.report_quarter,

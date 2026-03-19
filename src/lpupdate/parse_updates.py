@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .vehicles import canonicalize_company_name
+
 MONTHS = {
     'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
     'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
@@ -550,7 +552,7 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
         'gmail_thread_id': raw.get('gmail_thread_id'),
-        'company_name': infer_company(subject, body_text),
+        'company_name': canonicalize_company_name(infer_company(subject, body_text)),
         'subject': subject,
         'from_address': raw.get('from_address'),
         'to_addresses': raw.get('to_addresses', []),

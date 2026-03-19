@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .vehicles import company_vehicle_type, vehicles_for_company
+
 
 def slugify(value: str) -> str:
     value = value.lower().strip()
@@ -61,6 +63,17 @@ def render_list(items: list[str]) -> str:
     return '<ul>' + ''.join(f'<li>{html.escape(i)}</li>' for i in cleaned) + '</ul>'
 
 
+def render_vehicle_badges(vehicles: list[str]) -> str:
+    if not vehicles:
+        return '<span class="small">No vehicle mapping yet.</span>'
+    items = []
+    for vehicle in vehicles:
+        kind = company_vehicle_type(vehicle)
+        class_name = 'vehicle-fund' if kind == 'fund' else 'vehicle-spv'
+        items.append(f'<span class="vehicle-pill {class_name}">{html.escape(vehicle)}</span>')
+    return ''.join(items)
+
+
 def render_company_page(record: dict[str, Any]) -> str:
     company = record.get('company_name') or 'Unknown'
     summary = record.get('summary') or 'No summary available.'
@@ -68,6 +81,7 @@ def render_company_page(record: dict[str, Any]) -> str:
     highlights = record.get('highlights_json') or []
     asks = record.get('asks_json') or []
     risks = record.get('risks_json') or []
+    vehicles = record.get('vehicles_json') or vehicles_for_company(company)
     return f'''<!doctype html>
 <html>
 <head>
@@ -82,6 +96,9 @@ def render_company_page(record: dict[str, Any]) -> str:
     table.metrics th, table.metrics td {{ border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }}
     table.metrics th {{ width: 32%; background: #f7f7f7; }}
     .small {{ font-size: 0.92em; color: #666; }}
+    .vehicle-pill {{ display: inline-block; margin: 4px 8px 0 0; padding: 6px 10px; border-radius: 999px; font-size: 0.92em; font-weight: 600; }}
+    .vehicle-fund {{ background: #e8f1ff; color: #16324f; }}
+    .vehicle-spv {{ background: #eef8ea; color: #245c2a; }}
   </style>
 </head>
 <body>
@@ -93,6 +110,7 @@ def render_company_page(record: dict[str, Any]) -> str:
     <div><strong>Subject:</strong> {html.escape(str(record.get('subject') or 'Unknown'))}</div>
     <div><strong>Gmail message id:</strong> {html.escape(str(record.get('gmail_message_id') or 'Unknown'))}</div>
     <div><strong>Attachment text present:</strong> {html.escape(str(record.get('attachment_text_present', False)))}</div>
+    <div><strong>Investment vehicles:</strong> {render_vehicle_badges(vehicles)}</div>
   </div>
 
   <div class="card">
@@ -126,40 +144,68 @@ def render_company_page(record: dict[str, Any]) -> str:
 '''
 
 
-def render_index(records: list[dict[str, Any]]) -> str:
+def render_vehicle_group(title: str, records: list[dict[str, Any]]) -> str:
+    if not records:
+        return ''
     rows = []
     for rec in sorted(records, key=lambda r: (r.get('company_name') or '').lower()):
         company = rec.get('company_name') or 'Unknown'
         slug = slugify(company)
+        vehicles = rec.get('vehicles_json') or vehicles_for_company(company)
         rows.append(
             f"<tr><td><a href='startups/{slug}.html'>{html.escape(company)}</a></td>"
+            f"<td>{render_vehicle_badges(vehicles)}</td>"
             f"<td>{html.escape(str(rec.get('report_period_label') or 'Unknown'))}</td>"
             f"<td>{html.escape(str(rec.get('received_at') or 'Unknown'))}</td>"
             f"<td>{html.escape(str(rec.get('subject') or 'Unknown'))}</td></tr>"
         )
+    return f'''<section class="vehicle-section">
+  <h2>{html.escape(title)}</h2>
+  <table>
+    <thead>
+      <tr><th>Startup</th><th>Vehicles</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
+    </thead>
+    <tbody>
+      {''.join(rows)}
+    </tbody>
+  </table>
+</section>'''
+
+
+def render_index(records: list[dict[str, Any]]) -> str:
+    enriched = []
+    for rec in records:
+        enriched.append({**rec, 'vehicles_json': rec.get('vehicles_json') or vehicles_for_company(rec.get('company_name'))})
+
+    fund_i_records = [rec for rec in enriched if 'BuenTrip Ventures Fund I' in (rec.get('vehicles_json') or [])]
+    fund_ii_records = [rec for rec in enriched if 'BuenTrip Ventures Fund II' in (rec.get('vehicles_json') or [])]
+    spv_records = [rec for rec in enriched if any(company_vehicle_type(vehicle) == 'spv' for vehicle in (rec.get('vehicles_json') or []))]
+    unmapped_records = [rec for rec in enriched if not (rec.get('vehicles_json') or [])]
+
     return f'''<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>lpupdate startup report index</title>
   <style>
-    body {{ font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }}
-    table {{ width: 100%; border-collapse: collapse; }}
+    body {{ font-family: Arial, sans-serif; margin: 40px; max-width: 1200px; }}
+    table {{ width: 100%; border-collapse: collapse; margin-top: 12px; }}
     th, td {{ border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }}
     th {{ background: #f3f6fb; }}
+    .vehicle-section {{ margin-top: 28px; }}
+    .vehicle-pill {{ display: inline-block; margin: 4px 8px 0 0; padding: 6px 10px; border-radius: 999px; font-size: 0.9em; font-weight: 600; }}
+    .vehicle-fund {{ background: #e8f1ff; color: #16324f; }}
+    .vehicle-spv {{ background: #eef8ea; color: #245c2a; }}
+    .summary {{ color: #4b5563; max-width: 900px; }}
   </style>
 </head>
 <body>
   <h1>lpupdate — Latest Startup Reports</h1>
-  <p>One page per startup based on the latest parsed investor update.</p>
-  <table>
-    <thead>
-      <tr><th>Startup</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
-    </thead>
-    <tbody>
-      {''.join(rows)}
-    </tbody>
-  </table>
+  <p class="summary">One page per startup based on the latest parsed investor update. Startups are grouped by investment vehicle so you can quickly review Fund I, Fund II, and SPV coverage.</p>
+  {render_vehicle_group('BuenTrip Ventures Fund I', fund_i_records)}
+  {render_vehicle_group('BuenTrip Ventures Fund II', fund_ii_records)}
+  {render_vehicle_group('SPVs', spv_records)}
+  {render_vehicle_group('Unmapped startups', unmapped_records)}
 </body>
 </html>
 '''

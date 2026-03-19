@@ -4,22 +4,63 @@
   <meta charset="utf-8">
   <title>lpupdate startup report index</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1100px; }
-    table { width: 100%; border-collapse: collapse; }
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 1200px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th, td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
     th { background: #f3f6fb; }
+    .vehicle-section { margin-top: 28px; }
+    .vehicle-pill { display: inline-block; margin: 4px 8px 0 0; padding: 6px 10px; border-radius: 999px; font-size: 0.9em; font-weight: 600; }
+    .vehicle-fund { background: #e8f1ff; color: #16324f; }
+    .vehicle-spv { background: #eef8ea; color: #245c2a; }
+    .summary { color: #4b5563; max-width: 900px; }
   </style>
 </head>
 <body>
   <h1>lpupdate — Latest Startup Reports</h1>
-  <p>One page per startup based on the latest parsed investor update.</p>
+  <p class="summary">One page per startup based on the latest parsed investor update. Startups are grouped by investment vehicle so you can quickly review Fund I, Fund II, and SPV coverage.</p>
+  <section class="vehicle-section">
+  <h2>BuenTrip Ventures Fund I</h2>
   <table>
     <thead>
-      <tr><th>Startup</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
+      <tr><th>Startup</th><th>Vehicles</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
     </thead>
     <tbody>
-      <tr><td><a href='startups/aloja.html'>Aloja</a></td><td>Q4 2025</td><td>Sun, 15 Mar 2026 12:10:18 -0500</td><td>Fwd: Aloja: Q4 Investor Update 🚀</td></tr><tr><td><a href='startups/altscore.html'>AltScore</a></td><td>Q4 2025</td><td>Sun, 15 Mar 2026 12:14:21 -0500</td><td>Fwd: AltScore Investor/Internal Update [061]: Q4 2025 Review</td></tr><tr><td><a href='startups/birdie.html'>Birdie</a></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:51:28 -0500</td><td>Fwd: Birdie Q4 2025 Investor Update</td></tr><tr><td><a href='startups/constructai.html'>ConstructAI</a></td><td>February 2026</td><td>Fri, 6 Mar 2026 12:34:27 -0500</td><td>Fwd: ConstructAI Monthly Update - February 2026 - Our viral moment</td></tr><tr><td><a href='startups/leasy.html'>LEASY</a></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:51:46 -0500</td><td>Fwd: LEASY: Q4-25 Investor Update</td></tr><tr><td><a href='startups/mox.html'>MOX</a></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:52:09 -0500</td><td>Fwd: MOX Investor Update Q4 2025</td></tr><tr><td><a href='startups/neta-ai.html'>NETA AI</a></td><td>February 2026</td><td>Thu, 12 Mar 2026 13:51:01 -0500</td><td>Fwd: NETA AI – Investor Update | February 2026</td></tr><tr><td><a href='startups/nuvocargo.html'>Nuvocargo</a></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:53:00 -0500</td><td>Fwd: Nuvocargo: Q4 2025 Investor Update</td></tr><tr><td><a href='startups/paymon.html'>PayMon</a></td><td>December 2025</td><td>Sun, 15 Mar 2026 12:10:35 -0500</td><td>Fwd: PayMon Investor Update – Jan 2026 + 2025 summary: 2× Revenue &amp; GMV Growth; Profitability Achieved</td></tr><tr><td><a href='startups/shippify.html'>Shippify</a></td><td>January 2026</td><td>Sun, 15 Mar 2026 12:12:10 -0500</td><td>Fwd: Shippify BOD Update - January 2026</td></tr><tr><td><a href='startups/synthera-ai.html'>Synthera AI</a></td><td>February 2026</td><td>Thu, 12 Mar 2026 13:50:48 -0500</td><td>Fwd: Synthera AI: February 2026 Investor Update</td></tr><tr><td><a href='startups/vertebra.html'>Vertebra</a></td><td>Unknown</td><td>Sun, 15 Mar 2026 12:11:38 -0500</td><td>Fwd: Vertebra x BTV review</td></tr>
+      <tr><td><a href='startups/altscore.html'>AltScore</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund I</span><span class="vehicle-pill vehicle-spv">BTV AltScore Series A</span></td><td>Q4 2025</td><td>Sun, 15 Mar 2026 12:14:21 -0500</td><td>Fwd: AltScore Investor/Internal Update [061]: Q4 2025 Review</td></tr><tr><td><a href='startups/leasy.html'>LEASY</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund I</span></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:51:46 -0500</td><td>Fwd: LEASY: Q4-25 Investor Update</td></tr><tr><td><a href='startups/mox.html'>MOX</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund I</span></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:52:09 -0500</td><td>Fwd: MOX Investor Update Q4 2025</td></tr><tr><td><a href='startups/nuvocargo.html'>Nuvocargo</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund I</span></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:53:00 -0500</td><td>Fwd: Nuvocargo: Q4 2025 Investor Update</td></tr><tr><td><a href='startups/shippify.html'>Shippify</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund I</span></td><td>January 2026</td><td>Sun, 15 Mar 2026 12:12:10 -0500</td><td>Fwd: Shippify BOD Update - January 2026</td></tr>
     </tbody>
   </table>
+</section>
+  <section class="vehicle-section">
+  <h2>BuenTrip Ventures Fund II</h2>
+  <table>
+    <thead>
+      <tr><th>Startup</th><th>Vehicles</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><a href='startups/aloja.html'>Aloja</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></td><td>Q4 2025</td><td>Sun, 15 Mar 2026 12:10:18 -0500</td><td>Fwd: Aloja: Q4 Investor Update 🚀</td></tr><tr><td><a href='startups/birdie.html'>Birdie</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></td><td>Q4 2025</td><td>Thu, 12 Mar 2026 13:51:28 -0500</td><td>Fwd: Birdie Q4 2025 Investor Update</td></tr><tr><td><a href='startups/neta-ai.html'>NETA AI</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></td><td>February 2026</td><td>Thu, 12 Mar 2026 13:51:01 -0500</td><td>Fwd: NETA AI – Investor Update | February 2026</td></tr><tr><td><a href='startups/paymon.html'>PayMon</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></td><td>December 2025</td><td>Sun, 15 Mar 2026 12:10:35 -0500</td><td>Fwd: PayMon Investor Update – Jan 2026 + 2025 summary: 2× Revenue &amp; GMV Growth; Profitability Achieved</td></tr><tr><td><a href='startups/synthera-ai.html'>Synthera AI</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></td><td>February 2026</td><td>Thu, 12 Mar 2026 13:50:48 -0500</td><td>Fwd: Synthera AI: February 2026 Investor Update</td></tr><tr><td><a href='startups/vertebra.html'>Vertebra</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></td><td>Unknown</td><td>Sun, 15 Mar 2026 12:11:38 -0500</td><td>Fwd: Vertebra x BTV review</td></tr>
+    </tbody>
+  </table>
+</section>
+  <section class="vehicle-section">
+  <h2>SPVs</h2>
+  <table>
+    <thead>
+      <tr><th>Startup</th><th>Vehicles</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><a href='startups/altscore.html'>AltScore</a></td><td><span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund I</span><span class="vehicle-pill vehicle-spv">BTV AltScore Series A</span></td><td>Q4 2025</td><td>Sun, 15 Mar 2026 12:14:21 -0500</td><td>Fwd: AltScore Investor/Internal Update [061]: Q4 2025 Review</td></tr>
+    </tbody>
+  </table>
+</section>
+  <section class="vehicle-section">
+  <h2>Unmapped startups</h2>
+  <table>
+    <thead>
+      <tr><th>Startup</th><th>Vehicles</th><th>Latest Period</th><th>Received At</th><th>Subject</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><a href='startups/constructai.html'>ConstructAI</a></td><td><span class="small">No vehicle mapping yet.</span></td><td>February 2026</td><td>Fri, 6 Mar 2026 12:34:27 -0500</td><td>Fwd: ConstructAI Monthly Update - February 2026 - Our viral moment</td></tr>
+    </tbody>
+  </table>
+</section>
 </body>
 </html>

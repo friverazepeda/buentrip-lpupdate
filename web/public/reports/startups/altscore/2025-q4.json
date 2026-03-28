@@ -1,0 +1,24 @@
+{
+  "report_id": "2025-q4",
+  "startup": { "slug": "altscore", "name": "AltScore" },
+  "vehicles": ["BuenTrip Ventures Fund I", "BTV AltScore Series A"],
+  "meta": {
+    "report_period_label": "Q4 2025",
+    "received_at": "2026-03-15T17:14:21Z",
+    "subject": "AltScore Investor Update [061]: Q4 2025 Review",
+    "gmail_message_id": "sample-msg-id-001"
+  },
+  "summary": "Strong quarter with continued enterprise adoption and stable gross margin.",
+  "metrics": {
+    "arr_usd": { "value": 4200000, "currency": "USD", "period": "EOQ" },
+    "net_retention_pct": 118,
+    "cash_months": 22,
+    "customer_note": { "previous_value": 120, "current_value": 142, "currency": "USD" }
+  },
+  "highlights": [
+    "Closed two seven-figure expansion deals in LatAm.",
+    "Launched risk scoring API v2 with lower latency."
+  ],
+  "asks": ["Introductions to heads of credit at top-tier retailers in Mexico."],
+  "risks": ["Slower procurement cycles at two legacy accounts."]
+}

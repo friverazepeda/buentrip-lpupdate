@@ -1,0 +1,15 @@
+{
+  "report_id": "2025-q4",
+  "startup": { "slug": "aloja", "name": "Aloja" },
+  "vehicles": ["BuenTrip Ventures Fund II"],
+  "meta": {
+    "report_period_label": "Q4 2025",
+    "received_at": "2026-03-15T17:10:18Z",
+    "subject": "Aloja: Q4 Investor Update"
+  },
+  "summary": null,
+  "metrics": {},
+  "highlights": [],
+  "asks": [],
+  "risks": []
+}

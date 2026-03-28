@@ -1,0 +1,59 @@
+{
+  "title": "LP reports — portfolio overview",
+  "intro": "Latest reports by investment vehicle. Startups may appear under more than one group when they map to multiple vehicles.",
+  "summary_stats": [
+    { "label": "Total startups", "value": 2 },
+    { "label": "Sample Fund I rows", "value": 1 },
+    { "label": "Sample Fund II rows", "value": 1 }
+  ],
+  "vehicle_groups": [
+    {
+      "vehicle_title": "BuenTrip Ventures Fund I",
+      "rows": [
+        {
+          "slug": "altscore",
+          "name": "AltScore",
+          "vehicles": ["BuenTrip Ventures Fund I", "BTV AltScore Series A"],
+          "latest_report": {
+            "report_id": "2025-q4",
+            "report_period_label": "Q4 2025",
+            "received_at": "2026-03-15T17:14:21Z",
+            "subject": "AltScore Investor Update [061]: Q4 2025 Review"
+          }
+        }
+      ]
+    },
+    {
+      "vehicle_title": "BuenTrip Ventures Fund II",
+      "rows": [
+        {
+          "slug": "aloja",
+          "name": "Aloja",
+          "vehicles": ["BuenTrip Ventures Fund II"],
+          "latest_report": {
+            "report_id": "2025-q4",
+            "report_period_label": "Q4 2025",
+            "received_at": "2026-03-15T17:10:18Z",
+            "subject": "Aloja: Q4 Investor Update"
+          }
+        }
+      ]
+    },
+    {
+      "vehicle_title": "SPVs",
+      "rows": [
+        {
+          "slug": "altscore",
+          "name": "AltScore",
+          "vehicles": ["BuenTrip Ventures Fund I", "BTV AltScore Series A"],
+          "latest_report": {
+            "report_id": "2025-q4",
+            "report_period_label": "Q4 2025",
+            "received_at": "2026-03-15T17:14:21Z",
+            "subject": "AltScore Investor Update [061]: Q4 2025 Review"
+          }
+        }
+      ]
+    }
+  ]
+}

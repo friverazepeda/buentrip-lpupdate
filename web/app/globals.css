@@ -1,0 +1,81 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 40px;
+  max-width: 1200px;
+  line-height: 1.5;
+  color: #111;
+  background: #fff;
+}
+
+h1,
+h2 {
+  color: #16324f;
+}
+
+a {
+  color: #0b4f9c;
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+table.data-table th,
+table.data-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+table.data-table th {
+  background: #f3f6fb;
+}
+
+.page-muted {
+  color: #4b5563;
+  max-width: 900px;
+}
+
+.vehicle-section {
+  margin-top: 28px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 20px 0 8px;
+}
+
+.summary-card {
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f8fbff;
+}
+
+.summary-card-label {
+  font-size: 0.9em;
+  color: #526172;
+  margin-bottom: 6px;
+}
+
+.summary-card-value {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #16324f;
+}
+
+.copy-hint {
+  font-size: 0.88em;
+  color: #6b7280;
+  margin-top: 32px;
+}

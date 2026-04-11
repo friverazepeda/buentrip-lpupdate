@@ -1,0 +1,26 @@
+{
+  "startup": {
+    "slug": "buentrip-neta-ai",
+    "canonical_name": "BuenTrip <> Neta AI",
+    "investment_vehicles": [],
+    "latest_report": {
+      "report_id": "fathom_116711983",
+      "period_label": null,
+      "received_at": "2026-01-23T16:04:57Z",
+      "subject": "Fathom Call: BuenTrip <> Neta AI - engineer recruiting process ",
+      "detail_path": "startups/buentrip-neta-ai/fathom-116711983-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "fathom_116711983",
+      "period_label": null,
+      "received_at": "2026-01-23T16:04:57Z",
+      "subject": "Fathom Call: BuenTrip <> Neta AI - engineer recruiting process ",
+      "detail_path": "startups/buentrip-neta-ai/fathom-116711983-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

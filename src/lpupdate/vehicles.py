@@ -55,6 +55,8 @@ COMPANY_ALIASES: Final[dict[str, str]] = {
     'synthera ai': 'Synthera AI',
     'syntheraai': 'Synthera AI',
     'xmonitoring': 'Xmonitoring',
+    'theo': 'Familify',
+    'storybook': 'Familify',
 }
 
 
@@ -65,7 +67,8 @@ def canonicalize_company_name(company_name: str | None) -> str | None:
     lowered = cleaned.casefold()
     if lowered in COMPANY_ALIASES:
         return COMPANY_ALIASES[lowered]
-    return CANONICAL_COMPANY_NAMES.get(lowered, cleaned)
+    # Return mapped name if exists, else return None so unmapped garbage is ignored
+    return CANONICAL_COMPANY_NAMES.get(lowered, None)
 
 
 def vehicles_for_company(company_name: str | None) -> list[str]:

@@ -1,0 +1,36 @@
+{
+  "startup": {
+    "slug": "pardux",
+    "canonical_name": "Pardux",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "fathom_130338781",
+      "period_label": null,
+      "received_at": "2026-03-16T21:31:43Z",
+      "subject": "Fathom Call: Pardux Check in :: BTV",
+      "detail_path": "startups/pardux/fathom-130338781-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 2
+  },
+  "reports": [
+    {
+      "report_id": "fathom_130338781",
+      "period_label": null,
+      "received_at": "2026-03-16T21:31:43Z",
+      "subject": "Fathom Call: Pardux Check in :: BTV",
+      "detail_path": "startups/pardux/fathom-130338781-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_115396769",
+      "period_label": null,
+      "received_at": "2026-01-19T21:39:29Z",
+      "subject": "Fathom Call: Pardux Check in :: BTV",
+      "detail_path": "startups/pardux/fathom-115396769-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

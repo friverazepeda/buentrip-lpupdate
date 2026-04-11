@@ -1,0 +1,12 @@
+[Unit]
+Description=gunicorn daemon for lpupdate
+After=network.target
+
+[Service]
+User=frivera
+Group=frivera
+WorkingDirectory=/home/frivera/.openclaw/workspace/projects/lpupdate
+ExecStart=/home/frivera/.venvs/gmail-fetch/bin/gunicorn --access-logfile - --workers 3 --bind 127.0.0.1:8081 web.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

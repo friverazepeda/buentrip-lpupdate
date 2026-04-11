@@ -1,0 +1,220 @@
+{
+  "type": "transform",
+  "functionName": "investor-update-extractor",
+  "displayName": "Investor Update Extractor",
+  "outputSchemaName": "Investor Update Schema",
+  "outputSchema": {
+    "title": "Investor Update Document Schema",
+    "type": "object",
+    "properties": {
+      "company_name_raw": {
+        "type": "string",
+        "description": "The name of the startup that sent the update"
+      },
+      "reporting_period_raw": {
+        "type": "string",
+        "description": "The specific period (e.g., month and year) the investor update covers."
+      },
+      "summary": {
+        "type": "string",
+        "description": "Concise plain-English summary of the update/report"
+      },
+      "emailDate": {
+        "type": "string",
+        "description": "The date the email was sent."
+      },
+      "highlights": {
+        "type": "string",
+        "description": "Key highlights and achievements for the reported period."
+      },
+      "challenges": {
+        "type": "string",
+        "description": "Significant challenges faced by the company."
+      },
+      "asks": {
+        "type": "string",
+        "description": "requests, needs, or support sought from investors/stakeholders"
+      },
+      "metrics": {
+        "type": "object",
+        "description": "A summary of key financial and operational metrics.",
+        "properties": {
+          "metric_name": {
+            "type": "string",
+            "description": "metric name exactly as written in the source"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of this specific metric record."
+          },
+          "value_raw": {
+            "type": "number",
+            "description": "metric value exactly as written in the source"
+          },
+          "value_type": {
+            "type": "string",
+            "description": "category of value, e.g. \"money\", \"percentage\", \"count\", \"ratio\", \"date\", \"text\""
+          },
+          "period": {
+            "type": "string",
+            "description": "time basis if stated, e.g. \"monthly\", \"quarterly\", \"annual\", otherwise null"
+          },
+          "numeric_value": {
+            "type": "string",
+            "description": "parsed numeric value when reliably extractable"
+          },
+          "unit": {
+            "type": "string",
+            "description": "normalized unit if applicable, e.g. \"USD\", \"%\", \"customers\", otherwise null"
+          },
+          "source_excerpt": {
+            "type": "string",
+            "description": "short excerpt from the source supporting this metric"
+          }
+        },
+        "required": [
+          "metric_name",
+          "description",
+          "value_raw",
+          "value_type",
+          "period",
+          "numeric_value",
+          "unit",
+          "source_excerpt"
+        ]
+      },
+      "closingRemarks": {
+        "type": "string",
+        "description": "The concluding remarks or salutation at the end of the update."
+      },
+      "contactInformation": {
+        "type": "object",
+        "description": "Contact details for relevant parties mentioned in the document.",
+        "properties": {
+          "payMonContact": {
+            "type": "object",
+            "description": "Contact information for PayMon.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the contact person at PayMon."
+              },
+              "description": {
+                "type": "string",
+                "description": "A description of the PayMon contact record."
+              },
+              "title": {
+                "type": "string",
+                "description": "The title of the contact person at PayMon."
+              },
+              "phoneNumbers": {
+                "type": "object",
+                "description": "Phone numbers for the PayMon contact.",
+                "properties": {
+                  "mobile": {
+                    "type": "string",
+                    "description": "Mobile phone number"
+                  },
+                  "office": {
+                    "type": "string",
+                    "description": "Office phone number"
+                  }
+                }
+              },
+              "email": {
+                "type": "string",
+                "description": "The email address for the PayMon contact."
+              },
+              "website": {
+                "type": "string",
+                "description": "The website URL for PayMon."
+              },
+              "address": {
+                "type": "string",
+                "description": "The physical address for PayMon."
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "title",
+              "phoneNumbers",
+              "email",
+              "website",
+              "address"
+            ]
+          },
+          "buenTripVenturesContact": {
+            "type": "object",
+            "description": "Contact information for BuenTrip Ventures.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the contact person at BuenTrip Ventures."
+              },
+              "description": {
+                "type": "string",
+                "description": "A description of the BuenTrip Ventures contact record."
+              },
+              "title": {
+                "type": "string",
+                "description": "The title of the contact person at BuenTrip Ventures."
+              },
+              "phoneNumbers": {
+                "type": "object",
+                "description": "Phone numbers for the BuenTrip Ventures contact.",
+                "properties": {
+                  "mobile": {
+                    "type": "string",
+                    "description": "Mobile phone number"
+                  },
+                  "office": {
+                    "type": "string",
+                    "description": "Office phone number"
+                  }
+                }
+              },
+              "email": {
+                "type": "string",
+                "description": "The email address for the BuenTrip Ventures contact."
+              },
+              "website": {
+                "type": "string",
+                "description": "The website URL for BuenTrip Ventures."
+              },
+              "address": {
+                "type": "string",
+                "description": "The physical address for BuenTrip Ventures."
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "title",
+              "phoneNumbers",
+              "email",
+              "website",
+              "address"
+            ]
+          }
+        },
+        "required": [
+          "payMonContact",
+          "buenTripVenturesContact"
+        ]
+      }
+    },
+    "required": [
+      "company_name_raw",
+      "reporting_period_raw",
+      "summary",
+      "emailDate",
+      "highlights",
+      "challenges",
+      "asks",
+      "metrics",
+      "closingRemarks",
+      "contactInformation"
+    ]
+  }
+}

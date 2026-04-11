@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
+from dataclasses import replace
 from pathlib import Path
 
 from .config import Settings, load_dotenv
@@ -32,6 +34,8 @@ def cmd_doctor(_: argparse.Namespace) -> int:
         "bem_api_url": settings.bem_api_url,
         "bem_api_key_present": bool(settings.bem_api_key),
         "bem_timeout_seconds": settings.bem_timeout_seconds,
+        "bem_function_name": settings.bem_function_name,
+        "bem_workflow_name": settings.bem_workflow_name,
     }
     print(json.dumps(payload, indent=2))
     return 0
@@ -82,6 +86,8 @@ def cmd_gmail_check(_: argparse.Namespace) -> int:
     cfg = GmailClientConfig(
         client_secret_file=settings.google_oauth_client_secret_file,
         token_file=settings.google_oauth_token_file,
+        service_account_file=settings.google_service_account_file,
+        service_account_subject=settings.google_service_account_subject,
     )
     service = build_gmail_client(cfg)
     profile = service.users().getProfile(userId="me").execute()
@@ -97,11 +103,51 @@ def cmd_gmail_check(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_fathom_fetch(args: argparse.Namespace) -> int:
+    settings = Settings.from_env()
+    if not settings.fathom_api_key:
+        raise ValueError("FATHOM_API_KEY is not set")
+    from .fathom import FathomClient, normalize_fathom_meeting
+    from .store import ensure_data_dir, write_json
+    import json
+    client = FathomClient(settings.fathom_api_key)
+    meetings = client.list_meetings(limit=args.limit, include_transcript=True, include_summary=True, created_after=args.created_after)
+    if args.title_match:
+        meetings = [m for m in meetings if args.title_match.lower() in (m.get('title') or '').lower()]
+    if args.company_match:
+        from .db import list_companies
+        rows = list_companies(settings.database_url)
+        known_companies = [r['canonical_name'].lower() for r in rows] if rows else []
+        matched = []
+        for m in meetings:
+            title = (m.get('title') or '').lower()
+            if any(company in title for company in known_companies):
+                matched.append(m)
+        meetings = matched
+    data_dir = ensure_data_dir("data/raw_fathom")
+    fetched = []
+    for item in meetings:
+        normalized = normalize_fathom_meeting(item)
+        mid = normalized['gmail_message_id']
+        path = data_dir / f"{mid}.json"
+        write_json(path, normalized)
+        fetched.append({
+            'fathom_id': mid,
+            'title': item.get('title'),
+            'recorded_by': normalized['from_address'],
+            'date': normalized['received_at'],
+            'path': str(path)
+        })
+    print(json.dumps({"count": len(fetched), "meetings": fetched}, indent=2))
+    return 0
+
 def cmd_gmail_fetch(args: argparse.Namespace) -> int:
     settings = Settings.from_env()
     cfg = GmailClientConfig(
         client_secret_file=settings.google_oauth_client_secret_file,
         token_file=settings.google_oauth_token_file,
+        service_account_file=settings.google_service_account_file,
+        service_account_subject=settings.google_service_account_subject,
     )
     service = build_gmail_client(cfg)
     response = service.users().messages().list(
@@ -151,7 +197,13 @@ def cmd_parse_raw(args: argparse.Namespace) -> int:
     raw_dir = ensure_data_dir("data/raw_gmail")
     out_dir = ensure_data_dir("data/parsed_updates")
     provider_out_dir = ensure_data_dir(f"data/provider_outputs/{provider.name}")
-    raw_files = sorted(raw_dir.glob("*.json"))[: args.limit]
+    fathom_dir = ensure_data_dir("data/raw_fathom")
+    sources = []
+    if args.source in ('all', 'gmail'):
+        sources.extend(sorted(raw_dir.glob("*.json")))
+    if args.source in ('all', 'fathom'):
+        sources.extend(sorted(fathom_dir.glob("*.json")))
+    raw_files = sorted(sources, key=lambda f: f.name)[: args.limit]
     parsed: list[dict] = []
     for path in raw_files:
         raw = load_raw_message(path)
@@ -173,7 +225,77 @@ def cmd_parse_raw(args: argparse.Namespace) -> int:
             'parser_provider': update.get('parser_provider', provider.name),
             'path': str(out_dir / path.name),
         })
+        if args.throttle_seconds > 0:
+            time.sleep(args.throttle_seconds)
     print(json.dumps({'count': len(parsed), 'provider': provider.name, 'updates': parsed}, indent=2))
+    return 0
+
+
+def cmd_bem_sample_run(args: argparse.Namespace) -> int:
+    settings = Settings.from_env()
+    provider_name = (args.provider or settings.parse_provider or 'bem').lower()
+    provider_settings = replace(settings, parse_provider=provider_name)
+    provider = get_parse_provider(provider_settings)
+
+    sample_path = Path(args.sample_file).expanduser()
+    if not sample_path.exists():
+        raise FileNotFoundError(f'Sample file not found: {sample_path}')
+    samples = json.loads(sample_path.read_text())
+    if not isinstance(samples, list):
+        raise ValueError(f'Sample file must be a list, got {type(samples)}')
+
+    raw_dir = ensure_data_dir('data/raw_gmail')
+    sample_root = ensure_data_dir(Path('data') / 'provider_samples' / provider.name)
+    parsed_dir = ensure_data_dir(sample_root / 'parsed')
+    provider_out_dir = ensure_data_dir(sample_root / 'provider_output')
+
+    summary: list[dict] = []
+    missing: list[str] = []
+    for entry in samples:
+        if not isinstance(entry, dict):
+            continue
+        message_id = entry.get('gmail_message_id')
+        if not message_id:
+            continue
+        raw_path = raw_dir / f"{message_id}.json"
+        if not raw_path.exists():
+            missing.append(message_id)
+            continue
+        raw = load_raw_message(raw_path)
+        raw['source_path'] = str(raw_path)
+        bundle = build_source_bundle(raw)
+        raw['attachment_text'] = bundle.attachment_text
+        result = provider.parse(raw)
+        update = result.update
+        update['attachment_count'] = bundle.attachment_count
+        update['attachment_text_present'] = bundle.attachment_text_present
+        parsed_path = parsed_dir / f"{message_id}.json"
+        write_json(parsed_path, update)
+
+        provider_output_path = None
+        if result.provider_output is not None:
+            provider_output_path = provider_out_dir / f"{message_id}.json"
+            write_json(provider_output_path, result.provider_output)
+
+        summary.append({
+            'gmail_message_id': message_id,
+            'company_hint': entry.get('company'),
+            'company_detected': update.get('company_name'),
+            'metrics_count': len(update.get('metrics_json', {})),
+            'highlights_count': len(update.get('highlights_json', [])),
+            'asks_count': len(update.get('asks_json', [])),
+            'risks_count': len(update.get('risks_json', [])),
+            'parsed_path': str(parsed_path),
+            'provider_output_path': str(provider_output_path) if provider_output_path else None,
+        })
+
+    print(json.dumps({
+        'provider': provider.name,
+        'samples_requested': len(samples),
+        'samples_parsed': len(summary),
+        'missing_raw_messages': missing,
+        'results': summary,
+    }, indent=2))
     return 0
 
 
@@ -192,8 +314,14 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
         raise ValueError('LPUPDATE_DATABASE_URL is not set')
 
     raw_dir = ensure_data_dir('data/raw_gmail')
+    fathom_dir = ensure_data_dir('data/raw_fathom')
     parsed_dir = ensure_data_dir('data/parsed_updates')
-    parsed_files = sorted(parsed_dir.glob('*.json'))[: args.limit]
+    parsed_files = sorted(parsed_dir.glob('*.json'))
+    if args.source == 'gmail':
+        parsed_files = [p for p in parsed_files if not p.name.startswith('fathom_')]
+    elif args.source == 'fathom':
+        parsed_files = [p for p in parsed_files if p.name.startswith('fathom_')]
+    parsed_files = parsed_files[: args.limit]
     synced: list[dict] = []
 
     with connect(settings.database_url) as conn:
@@ -202,18 +330,25 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
             for parsed_path in parsed_files:
                 parsed = load_raw_message(parsed_path)
                 raw_path = raw_dir / parsed_path.name
+                if not raw_path.exists():
+                    alt_path = fathom_dir / parsed_path.name
+                    if alt_path.exists():
+                        raw_path = alt_path
+                    else:
+                        continue
                 raw = load_raw_message(raw_path)
                 company_id = None
                 if parsed.get('company_name'):
                     company_id = upsert_company(cur, parsed['company_name'])
                 email_message_id = upsert_email_message(cur, raw)
                 update_id = upsert_quarterly_update(cur, email_message_id, company_id, parsed)
-                synced.append({
-                    'gmail_message_id': parsed.get('gmail_message_id'),
-                    'company_name': parsed.get('company_name'),
-                    'email_message_id': email_message_id,
-                    'quarterly_update_id': update_id,
-                })
+                if update_id is not None:
+                    synced.append({
+                        'gmail_message_id': parsed.get('gmail_message_id'),
+                        'company_name': parsed.get('company_name'),
+                        'email_message_id': email_message_id,
+                        'quarterly_update_id': update_id,
+                    })
         conn.commit()
 
     print(json.dumps({'count': len(synced), 'synced': synced}, indent=2))
@@ -335,19 +470,34 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("gmail-check", help="verify Gmail API access and label visibility")
     p.set_defaults(func=cmd_gmail_check)
 
+    p = sub.add_parser("fathom-fetch", help="fetch recent Fathom meetings as pseudo-updates")
+    p.add_argument("--limit", type=int, default=10)
+    p.add_argument("--title-match", help="Only import meetings with this substring in the title")
+    p.add_argument("--company-match", action="store_true", help="Only import meetings whose title contains a known company name from Postgres")
+    p.add_argument("--created-after", help="ISO timestamp (e.g. 2025-12-01T00:00:00Z) to filter meetings")
+    p.set_defaults(func=cmd_fathom_fetch)
+
     p = sub.add_parser("gmail-fetch", help="fetch raw Gmail messages for the configured query")
     p.add_argument("--limit", type=int, default=10)
     p.set_defaults(func=cmd_gmail_fetch)
 
     p = sub.add_parser("parse-raw", help="parse fetched raw Gmail messages into normalized update JSON")
     p.add_argument("--limit", type=int, default=50)
+    p.add_argument("--source", choices=['all', 'gmail', 'fathom'], default='all', help="Which raw source directory to parse")
+    p.add_argument("--throttle-seconds", type=float, default=0.0, help="Seconds to sleep between parses (avoid API rate limits)")
     p.set_defaults(func=cmd_parse_raw)
+
+    p = sub.add_parser("bem-sample-run", help="run the parse provider on the curated BEM eval set")
+    p.add_argument("--sample-file", default="samples/bem_eval_samples.json", help="path to the Gmail id list")
+    p.add_argument("--provider", choices=["bem", "hybrid", "rules"], default="bem")
+    p.set_defaults(func=cmd_bem_sample_run)
 
     p = sub.add_parser("db-apply", help="apply Postgres schema")
     p.set_defaults(func=cmd_db_apply)
 
     p = sub.add_parser("sync-postgres", help="sync parsed updates into Postgres")
     p.add_argument("--limit", type=int, default=100)
+    p.add_argument("--source", choices=['all', 'gmail', 'fathom'], default='all', help="Only sync parsed files from this source")
     p.set_defaults(func=cmd_sync_postgres)
 
     p = sub.add_parser("list-updates", help="list synced updates from Postgres")

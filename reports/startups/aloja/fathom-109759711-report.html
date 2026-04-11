@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Aloja — Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; line-height: 1.5; }
+    h1, h2 { color: #16324f; }
+    .meta { color: #555; margin-bottom: 24px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 18px 0; }
+    table.metrics { width: 100%; border-collapse: collapse; }
+    table.metrics th, table.metrics td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    table.metrics th { width: 32%; background: #f7f7f7; }
+    .small { font-size: 0.92em; color: #666; }
+    .vehicle-pill { display: inline-block; margin: 4px 8px 0 0; padding: 6px 10px; border-radius: 999px; font-size: 0.92em; font-weight: 600; }
+    .vehicle-fund { background: #e8f1ff; color: #16324f; }
+    .vehicle-spv { background: #eef8ea; color: #245c2a; }
+  </style>
+</head>
+<body>
+  <p><a href="../index.html">← Back to Aloja reports</a></p>
+  <h1>Aloja</h1>
+  <div class="meta">
+    <div><strong>Report period:</strong> Unknown</div>
+    <div><strong>Received at:</strong> 2025-12-18T16:38:57Z</div>
+    <div><strong>Subject:</strong> Fathom Call: Aloja::BTV monthly</div>
+    <div><strong>Gmail message id:</strong> fathom_109759711</div>
+    <div><strong>Attachment text present:</strong> False</div>
+    <div><strong>Investment vehicles:</strong> <span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Summary</h2>
+    <p>The company has made significant progress, increasing its client base from 12 to 15, with annualized contracts totaling $474,000. They anticipate closing two more contracts by year-end, adding $9,000 monthly. The update highlights the variable nature of contracts in the tourism industry, where revenue fluctuates with client sales and product activation. A major challenge is the lack of Pricing Over API integration between Bokun (their system) and Viator (a major reseller), which is a top priority for Q1. The company is currently in a &#x27;private beta&#x27; phase with 8 clients, focusing on stabilizing the ETL process for data extraction, transformation, and loading, which has presented several technical hurdles. They aim to have the first client live with dynamic pricing by January 19th, with subsequent clients going live every one to two days. The team is also refining the algorithm to better account for seasonality and capacity management based on client feedback. They are confident in their market position and the value proposition of dynamic pricing, despite the technical challenges.</p>
+  </div>
+
+  <div class="card">
+    <h2>Key Metrics</h2>
+    <table class="metrics"><tr><th>Clientes</th><td>15 (current)</td></tr><tr><th>Valor Anualizado</th><td>474,000 (annual)</td></tr><tr><th>Contratos Adicionales</th><td>9,000 (monthly)</td></tr><tr><th>Churn</th><td>0 (current)</td></tr><tr><th>Clientes Instalados En Bocum</th><td>8 (current)</td></tr><tr><th>Onboarding Duration</th><td>4 (current)</td></tr><tr><th>Onboarding Duration (Target)</th><td>2 (future)</td></tr><tr><th>Primer Cliente Go Live</th><td>19 (future)</td></tr></table>
+  </div>
+
+  <div class="card">
+    <h2>Highlights</h2>
+    <ul><li>Increased client base from 12 to 15. Annualized contract value reached $474,000. Expecting two more contracts by year-end, adding $9,000 monthly. Identified and are addressing the lack of Pricing Over API between Bokun and Viator, which is a top priority for Q1. Successfully onboarded 8 clients in a &#x27;private beta&#x27; phase. Refined the algorithm to better reflect seasonality and capacity management based on client feedback. Strong market pull for dynamic pricing, with clients actively seeking implementation.</li></ul>
+  </div>
+
+  <div class="card">
+    <h2>Asks</h2>
+    <ul><li>The document does not explicitly state any &#x27;asks&#x27; from investors/stakeholders. The discussion revolves around internal challenges and strategies.</li></ul>
+  </div>
+
+  <div class="card">
+    <h2>Risks</h2>
+    <ul><li>The primary challenge is the ETL (Extraction, Transformation, Load) process, specifically with data extraction from Bokun due to API quota limitations and unexpected data variations (e.g., clients with less than 3 years of historical data). Lack of Pricing Over API integration between Bokun and Viator, a major reseller, prevents clients from deploying dynamic pricing through a significant channel. The onboarding process is currently taking longer than planned (3-4 weeks, sometimes 6-7 weeks) due to the need for manual adjustments and addressing inconsistencies. Balancing the ambition to grow rapidly with the need for stable product development and minimizing edge cases. The current technical team size limits the speed of development and addressing all identified issues simultaneously.</li></ul>
+  </div>
+</body>
+</html>

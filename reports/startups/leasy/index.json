@@ -1,0 +1,28 @@
+{
+  "startup": {
+    "slug": "leasy",
+    "canonical_name": "LEASY",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "19ce3643bb68585d",
+      "period_label": "Q4 2025",
+      "received_at": "Thu, 12 Mar 2026 13:51:46 -0500",
+      "subject": "Fwd: LEASY: Q4-25 Investor Update",
+      "detail_path": "startups/leasy/19ce3643bb68585d-q4-2025.html",
+      "source_type": "gmail"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "19ce3643bb68585d",
+      "period_label": "Q4 2025",
+      "received_at": "Thu, 12 Mar 2026 13:51:46 -0500",
+      "subject": "Fwd: LEASY: Q4-25 Investor Update",
+      "detail_path": "startups/leasy/19ce3643bb68585d-q4-2025.html",
+      "source_type": "gmail"
+    }
+  ]
+}

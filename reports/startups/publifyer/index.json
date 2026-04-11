@@ -1,0 +1,44 @@
+{
+  "startup": {
+    "slug": "publifyer",
+    "canonical_name": "Publifyer",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund II"
+    ],
+    "latest_report": {
+      "report_id": "fathom_132523779",
+      "period_label": null,
+      "received_at": "2026-03-24T20:54:00Z",
+      "subject": "Fathom Call: Publifyer check-in",
+      "detail_path": "startups/publifyer/fathom-132523779-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 3
+  },
+  "reports": [
+    {
+      "report_id": "fathom_132523779",
+      "period_label": null,
+      "received_at": "2026-03-24T20:54:00Z",
+      "subject": "Fathom Call: Publifyer check-in",
+      "detail_path": "startups/publifyer/fathom-132523779-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_117937210",
+      "period_label": null,
+      "received_at": "2026-01-28T19:47:57Z",
+      "subject": "Fathom Call: BTV<>Publifyer One Time",
+      "detail_path": "startups/publifyer/fathom-117937210-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_106442669",
+      "period_label": null,
+      "received_at": "2025-12-04T20:44:29Z",
+      "subject": "Fathom Call: Publifyer check-in",
+      "detail_path": "startups/publifyer/fathom-106442669-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

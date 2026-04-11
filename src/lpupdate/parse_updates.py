@@ -7,14 +7,17 @@ from typing import Any
 
 from .vehicles import canonicalize_company_name
 
+MONTH_PATTERN = r'(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
+
 MONTHS = {
     'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5, 'june': 6,
     'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
+    'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'sept': 9, 'oct': 10, 'nov': 11, 'dec': 12,
 }
 
 
 SECTION_ALIASES = {
-    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?', 'Investor Update – Q4', '🏆 Achievements', '📈 Traction'],
+    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?', 'Investor Update – Q4', '🏆 Achievements', '📈 Traction', 'TLDR'],
     'asks': ['How you can help', 'Asks', 'Thanks and Asks', '👍 How can you help?', '🙏 Asks', 'Blurbs to facilitate connections you can help us with'],
     'risks': ['Risks', 'The Bad', '🔴 The Bad: Strategic Consolidation', '🏋 Challenges', 'Update on Fundraising / Lowlights and Focus Areas'],
 }
@@ -118,6 +121,19 @@ def infer_period(subject: str | None, body_text: str | None) -> dict[str, Any]:
             'report_year': year,
             'report_month': None,
         }
+    range_match = re.search(rf'{MONTH_PATTERN}\s+\d{{1,2}}\s*[-–]\s+{MONTH_PATTERN}\s+\d{{1,2}}\s*(20\d{{2}})', text, re.IGNORECASE)
+    if range_match:
+        start_month = MONTHS[range_match.group(1).lower()]
+        end_month_name = range_match.group(2).lower()
+        year = int(range_match.group(3))
+        end_month = MONTHS[end_month_name]
+        quarter = (end_month - 1) // 3 + 1
+        return {
+            'report_period_label': f'Q{quarter} {year}',
+            'report_quarter': quarter,
+            'report_year': year,
+            'report_month': None,
+        }
     month_match = re.search(r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+(20\d{2})', text, re.IGNORECASE)
     if month_match:
         month_name = month_match.group(1).lower()
@@ -153,6 +169,7 @@ def _money_number(value: str) -> float:
 
 def _normalize_text(text: str | None) -> str:
     value = text or ''
+    value = value.replace('\r\n', '\n').replace('\r', '\n')
     value = value.replace('\u202f', ' ').replace('\xa0', ' ')
     value = value.replace('–', '-').replace('—', '-')
     value = value.replace('“', '"').replace('”', '"').replace('’', "'")
@@ -181,7 +198,8 @@ def _cleanup_section_text(text: str) -> str:
     value = re.sub(r'^\*?Blurbs to facilitate connections you can help us with:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
     value = re.sub(r'^\*?Update on Fundraising / Lowlights and Focus Areas:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
     value = re.sub(r'^\*?🏋 Challenges\*?$', 'Risks', value, flags=re.MULTILINE)
-    value = re.sub(r'^\*?📈 Looking Ahead\*?$', 'How you can help', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?📈 Looking Ahead\*?$', 'Looking Ahead', value, flags=re.MULTILINE)
+    value = re.sub(r'^\*?Looking Ahead\*?$', 'Looking Ahead', value, flags=re.MULTILINE | re.IGNORECASE)
     value = re.sub(r'^\*?📈 Traction\*?$', 'Highlights', value, flags=re.MULTILINE)
     value = re.sub(r'^\*?🏆 Achievements\*?$', 'Highlights', value, flags=re.MULTILINE)
     value = re.sub(r'^\*?Highlights:?\*?$', 'Highlights', value, flags=re.MULTILINE | re.IGNORECASE)
@@ -194,6 +212,9 @@ def _cleanup_section_text(text: str) -> str:
 
 
 def _strip_signature(text: str) -> str:
+    thread_match = re.search(r'\nOn [A-Za-z]{3,9}, .*? wrote:', text, flags=re.IGNORECASE | re.DOTALL)
+    if thread_match:
+        text = text[:thread_match.start()]
     patterns = [
         r'\n--\s*\n.*$',
         r'\nOnwards,.*$',
@@ -525,6 +546,10 @@ def _filter_section_items(items: list[str], kind: str) -> list[str]:
             continue
         if kind == 'risks' and any(token in lower for token in ['auditor', 'audit report', 'management\'s responsibility', 'documentary support']):
             continue
+        if kind == 'risks' and lower.startswith('●'):
+            continue
+        if kind == 'risks' and ('board of directors' in lower or 'brazilian accounting standards' in lower or 'nbc (' in lower):
+            continue
         if any(token in lower for token in banned_substrings.get(kind, [])):
             continue
         filtered.append(text)
@@ -543,12 +568,26 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     stop_headings = [
         'How you can help', 'Runway', 'Learn more', 'Asks', 'Thanks and Asks',
         'Fundraising & Financing', 'Fundraising - Equity', 'Product and Technology', 'Key Events', 'Team & Culture',
-        'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing', '🏋 Challenges', '📈 KPIs',
+        'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing', '🏋 Challenges', 'Risks', 'Looking Ahead', '📈 KPIs',
         'Update on Fundraising / Lowlights and Focus Areas', 'Blurbs to facilitate connections you can help us with',
     ]
-    highlights = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings), 'highlights')
-    asks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['asks'], ['Runway', 'Learn more', 'Blurbs to facilitate connections', 'Highlights', 'Risks', 'Closing Thoughts']), 'asks')
-    risks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks', 'Highlights', '📈 KPIs', '2026 Overall Targets', 'Closing Thoughts']), 'risks')
+    highlight_section = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
+    looking_ahead_section = extract_section_by_aliases(
+        combined_text,
+        ['Looking Ahead'],
+        ['Risks', 'Closing Thoughts', 'How you can help', 'Thanks and Asks']
+    )
+    highlight_items = (highlight_section or []) + (looking_ahead_section or [])
+    highlights = _filter_section_items(highlight_items, 'highlights')
+    asks = _filter_section_items(
+        extract_section_by_aliases(
+            combined_text,
+            SECTION_ALIASES['asks'],
+            ['Runway', 'Learn more', 'Blurbs to facilitate connections', 'Highlights', 'Risks', 'Closing Thoughts', 'AltScore Investor/Internal Update', 'Investor/Internal Update', 'Investor Update']
+        ),
+        'asks',
+    )
+    risks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks', 'Highlights', 'Looking Ahead', '📈 KPIs', '2026 Overall Targets', 'Closing Thoughts']), 'risks')
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
         'gmail_thread_id': raw.get('gmail_thread_id'),

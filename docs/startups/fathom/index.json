@@ -1,0 +1,42 @@
+{
+  "startup": {
+    "slug": "fathom",
+    "canonical_name": "Fathom",
+    "investment_vehicles": [],
+    "latest_report": {
+      "report_id": "fathom_133186355",
+      "period_label": null,
+      "received_at": "2026-03-26T17:55:20Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/fathom/fathom-133186355-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 3
+  },
+  "reports": [
+    {
+      "report_id": "fathom_133186355",
+      "period_label": null,
+      "received_at": "2026-03-26T17:55:20Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/fathom/fathom-133186355-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_125686026",
+      "period_label": null,
+      "received_at": "2026-02-26T17:44:34Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/fathom/fathom-125686026-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_118238870",
+      "period_label": null,
+      "received_at": "2026-01-29T17:34:14Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/fathom/fathom-118238870-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

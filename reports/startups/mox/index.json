@@ -1,0 +1,28 @@
+{
+  "startup": {
+    "slug": "mox",
+    "canonical_name": "MOX",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "19ce3648867ff057",
+      "period_label": "Q4 2025",
+      "received_at": "Thu, 12 Mar 2026 13:52:09 -0500",
+      "subject": "Fwd: MOX Investor Update Q4 2025",
+      "detail_path": "startups/mox/19ce3648867ff057-q4-2025.html",
+      "source_type": "gmail"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "19ce3648867ff057",
+      "period_label": "Q4 2025",
+      "received_at": "Thu, 12 Mar 2026 13:52:09 -0500",
+      "subject": "Fwd: MOX Investor Update Q4 2025",
+      "detail_path": "startups/mox/19ce3648867ff057-q4-2025.html",
+      "source_type": "gmail"
+    }
+  ]
+}

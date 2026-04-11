@@ -35,6 +35,12 @@ PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli show-
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli generate-report
 ```
 
+### BEM sample harness
+```bash
+LPUPDATE_PARSE_PROVIDER=bem lpupdate bem-sample-run
+LPUPDATE_PARSE_PROVIDER=hybrid lpupdate bem-sample-run --provider hybrid
+```
+
 ## Parser progress
 
 ### Core improvements already done
@@ -85,6 +91,12 @@ Added cleanup to reduce:
 - quoted-thread markers
 - small garbage lines
 - duplicated section items
+
+## BEM provider status
+- `BemParseProvider` now posts to the v2 `/calls` endpoint, injects `bem_schema.json`, and normalizes multiple metrics/contact blocks.
+- `BEM_WORKFLOW_NAME` selects the workflow slug (`btv_lpupdate_extraction_gpu0nlg` in `.env`), payload text is base64-encoded per BEM’s contract, and the provider polls `/v2/calls/{callID}` until the workflow outputs `transformedContent`.
+- `lpupdate bem-sample-run` executes any provider on the curated Gmail IDs under `samples/bem_eval_samples.json` and saves outputs to `data/provider_samples/<provider>/`.
+- Use the harness to compare bem vs hybrid vs rules before enabling hybrid in production.
 
 ## Sample-specific status
 
@@ -142,6 +154,7 @@ Now parses:
 Now recognized correctly and parses:
 - Q4 2025
 - bookings
+- Extracting 6 metrics, 1 highlight, 1 ask, and 1 risk successfully (as of recent test `crisp-lo` on msg `19cf27a5961737e9`).
 
 ### Vertebra
 Company detection fixed.
@@ -162,8 +175,8 @@ Highlights are decent, metrics are good, but:
 - audit appendix / supporting documentation text still leaks into `risks_json`
 
 ### 3. Aloja section semantics
-Cleaner than before, but:
-- “looking ahead” content is still being treated more like risks than forward plan
+Recent test on `19cf27a5961737e9` successfully parsed 1 highlight, 1 ask, and 1 risk, up from 0.
+- Needs verification if the extracted risk is valid or if “looking ahead” content is still misclassified as a risk.
 
 ### 4. Vertebra thread-style structure
 Safe now, but still underparsed:
@@ -173,10 +186,11 @@ Safe now, but still underparsed:
 
 ## Best next tasks
 Most valuable next work:
-1. AltScore structure-aware section parsing
-2. Shippify appendix/audit suppression
-3. Vertebra thread/reply cleanup
-4. optional: improve Aloja forward-looking section classification
+1. Run `lpupdate bem-sample-run` for `bem` and `hybrid`, compare outputs vs `rules`, and log schema / metric gaps.
+2. AltScore structure-aware section parsing
+3. Shippify appendix/audit suppression
+4. Vertebra thread/reply cleanup
+5. optional: verify Aloja forward-looking section classification after recent extraction update.
 
 ## Relevant commits
 - `3636c41` — `Improve parser precision heuristics`
@@ -187,3 +201,10 @@ Most valuable next work:
 Use this in a fresh session:
 
 > Continue work on `lpupdate` in `/home/frivera/.openclaw/workspace/projects/lpupdate`. Latest relevant commits are `6c911d5`, `6f42ecc`, and `3636c41`. The parser metrics are much better, but section extraction still needs work, especially for AltScore asks and Shippify audit-appendix contamination. Focus on `src/lpupdate/parse_updates.py`.
+
+## Follow-up note
+Leave this for later:
+- revisit SecretRef cleanup related to OpenClaw/project secrets and Gmail handling
+- current state: core OpenClaw secrets were moved to env-backed SecretRefs, but the Gmail env file was intentionally left as-is
+- Gmail env file path: `/home/frivera/.openclaw/env/gmail-ai`
+- later decision needed: whether `lpupdate` should keep using a separate Gmail/env workflow or be wired into native OpenClaw `hooks.gmail`

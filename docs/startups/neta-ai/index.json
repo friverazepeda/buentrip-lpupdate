@@ -1,0 +1,44 @@
+{
+  "startup": {
+    "slug": "neta-ai",
+    "canonical_name": "Neta AI",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund II"
+    ],
+    "latest_report": {
+      "report_id": "19ce3637a3f2236b",
+      "period_label": "February 2026",
+      "received_at": "Thu, 12 Mar 2026 13:51:01 -0500",
+      "subject": "Fwd: NETA AI \u2013 Investor Update | February 2026",
+      "detail_path": "startups/neta-ai/19ce3637a3f2236b-february-2026.html",
+      "source_type": "gmail"
+    },
+    "report_count": 3
+  },
+  "reports": [
+    {
+      "report_id": "19ce3637a3f2236b",
+      "period_label": "February 2026",
+      "received_at": "Thu, 12 Mar 2026 13:51:01 -0500",
+      "subject": "Fwd: NETA AI \u2013 Investor Update | February 2026",
+      "detail_path": "startups/neta-ai/19ce3637a3f2236b-february-2026.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "fathom_113592209",
+      "period_label": null,
+      "received_at": "2026-01-12T20:02:39Z",
+      "subject": "Fathom Call: BuenTrip Onboarding<>Neta AI",
+      "detail_path": "startups/neta-ai/fathom-113592209-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_109402471",
+      "period_label": null,
+      "received_at": "2025-12-17T15:48:59Z",
+      "subject": "Fathom Call: Neta AI (Lemi) and Fernando Rivera",
+      "detail_path": "startups/neta-ai/fathom-109402471-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

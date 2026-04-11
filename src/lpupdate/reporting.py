@@ -76,6 +76,37 @@ def render_vehicle_badges(vehicles: list[str]) -> str:
     return ''.join(items)
 
 
+def record_source_type(record: dict[str, Any]) -> str:
+    message_id = str(record.get('gmail_message_id') or '').lower()
+    return 'fathom' if message_id.startswith('fathom_') else 'gmail'
+
+
+def build_report_summary(record: dict[str, Any], slug: str) -> dict[str, Any]:
+    return {
+        'report_id': record.get('gmail_message_id'),
+        'period_label': record.get('report_period_label'),
+        'received_at': record.get('received_at'),
+        'subject': record.get('subject'),
+        'detail_path': f"startups/{slug}/{report_filename(record)}",
+        'source_type': record_source_type(record),
+    }
+
+
+def build_startup_payload(company: str, records: list[dict[str, Any]]) -> dict[str, Any]:
+    ordered = sort_records_desc(records)
+    slug = slugify(company)
+    vehicles = ordered[0].get('vehicles_json') or vehicles_for_company(company)
+    reports = [build_report_summary(rec, slug) for rec in ordered]
+    latest = reports[0] if reports else None
+    return {
+        'slug': slug,
+        'canonical_name': company,
+        'investment_vehicles': vehicles,
+        'latest_report': latest,
+        'reports': reports,
+    }
+
+
 def received_at_sort_key(value: Any) -> datetime:
     text = str(value or '').strip()
     if not text:
@@ -323,6 +354,53 @@ def render_index(records: list[dict[str, Any]]) -> str:
 '''
 
 
+
+
+def export_json_site(out_dir: Path, startups: list[dict[str, Any]]) -> None:
+    if not startups:
+        return
+    generated_at = datetime.now(timezone.utc).isoformat()
+    vehicle_groups: dict[str, list[dict[str, Any]]] = {}
+    overview_startups: list[dict[str, Any]] = []
+
+    for startup in startups:
+        summary = {
+            'slug': startup['slug'],
+            'canonical_name': startup['canonical_name'],
+            'investment_vehicles': startup['investment_vehicles'],
+            'latest_report': startup['latest_report'],
+            'reports': startup['reports'],
+        }
+        overview_startups.append(summary)
+        vehicles = startup['investment_vehicles'] or ['Unmapped']
+        for vehicle in vehicles:
+            vehicle_groups.setdefault(vehicle, []).append(summary)
+
+    overview_payload = {
+        'generated_at': generated_at,
+        'vehicle_groups': [
+            {'title': title, 'startups': vehicle_groups[title]}
+            for title in sorted(vehicle_groups.keys())
+        ],
+    }
+    (out_dir / 'index.json').write_text(json.dumps(overview_payload, indent=2))
+
+    for startup in startups:
+        startup_payload = {
+            'startup': {
+                'slug': startup['slug'],
+                'canonical_name': startup['canonical_name'],
+                'investment_vehicles': startup['investment_vehicles'],
+                'latest_report': startup['latest_report'],
+                'report_count': len(startup['reports']),
+            },
+            'reports': startup['reports'],
+        }
+        startup_dir = out_dir / 'startups' / startup['slug']
+        startup_dir.mkdir(parents=True, exist_ok=True)
+        (startup_dir / 'index.json').write_text(json.dumps(startup_payload, indent=2))
+
+
 def latest_by_company(parsed_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     latest: dict[str, dict[str, Any]] = {}
     for rec in parsed_records:
@@ -352,6 +430,7 @@ def generate_report_site(parsed_dir: str | Path, out_dir: str | Path) -> dict[st
     grouped_records = records_by_company(parsed_records)
 
     report_count = 0
+    startup_payloads: list[dict[str, Any]] = []
     for company, records in grouped_records.items():
         slug = slugify(company)
         company_dir = startup_dir / slug
@@ -360,8 +439,10 @@ def generate_report_site(parsed_dir: str | Path, out_dir: str | Path) -> dict[st
         for rec in records:
             (company_dir / report_filename(rec)).write_text(render_report_page(rec))
             report_count += 1
+        startup_payloads.append(build_startup_payload(company, records))
 
     (out_dir / 'index.html').write_text(render_index(latest_records))
+    export_json_site(out_dir, startup_payloads)
     return {
         'company_count': len(latest_records),
         'report_count': report_count,

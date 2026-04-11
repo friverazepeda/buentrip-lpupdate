@@ -1,0 +1,60 @@
+{
+  "startup": {
+    "slug": "aloja",
+    "canonical_name": "Aloja",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund II"
+    ],
+    "latest_report": {
+      "report_id": "19cf27a5961737e9",
+      "period_label": null,
+      "received_at": "Sun, 15 Mar 2026 12:10:18 -0500",
+      "subject": "Fwd: Aloja: Q4 Investor Update \ud83d\ude80",
+      "detail_path": "startups/aloja/19cf27a5961737e9-report.html",
+      "source_type": "gmail"
+    },
+    "report_count": 5
+  },
+  "reports": [
+    {
+      "report_id": "19cf27a5961737e9",
+      "period_label": null,
+      "received_at": "Sun, 15 Mar 2026 12:10:18 -0500",
+      "subject": "Fwd: Aloja: Q4 Investor Update \ud83d\ude80",
+      "detail_path": "startups/aloja/19cf27a5961737e9-report.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "fathom_129005507",
+      "period_label": null,
+      "received_at": "2026-03-11T15:40:00Z",
+      "subject": "Fathom Call: Aloja::BTV monthly",
+      "detail_path": "startups/aloja/fathom-129005507-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_121552464",
+      "period_label": null,
+      "received_at": "2026-02-11T15:37:22Z",
+      "subject": "Fathom Call: Aloja::BTV monthly",
+      "detail_path": "startups/aloja/fathom-121552464-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_114172796",
+      "period_label": null,
+      "received_at": "2026-01-14T15:20:40Z",
+      "subject": "Fathom Call: Aloja::BTV monthly",
+      "detail_path": "startups/aloja/fathom-114172796-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_109759711",
+      "period_label": null,
+      "received_at": "2025-12-18T16:38:57Z",
+      "subject": "Fathom Call: Aloja::BTV monthly",
+      "detail_path": "startups/aloja/fathom-109759711-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

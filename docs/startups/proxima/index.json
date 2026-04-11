@@ -1,0 +1,26 @@
+{
+  "startup": {
+    "slug": "proxima",
+    "canonical_name": "Proxima",
+    "investment_vehicles": [],
+    "latest_report": {
+      "report_id": "fathom_133600378",
+      "period_label": null,
+      "received_at": "2026-03-27T21:33:56Z",
+      "subject": "Fathom Call: Demo ProJourney | Gesti\u00f3n de Brokers",
+      "detail_path": "startups/proxima/fathom-133600378-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "fathom_133600378",
+      "period_label": null,
+      "received_at": "2026-03-27T21:33:56Z",
+      "subject": "Fathom Call: Demo ProJourney | Gesti\u00f3n de Brokers",
+      "detail_path": "startups/proxima/fathom-133600378-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

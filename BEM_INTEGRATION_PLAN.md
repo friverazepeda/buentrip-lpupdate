@@ -16,6 +16,15 @@ The CLI entrypoint `parse-raw` now:
 4. writes canonical parsed JSON to `data/parsed_updates/`
 5. writes provider-native output to `data/provider_outputs/<provider>/`
 
+## Current wiring status (2026-03-27)
+
+- `BemParseProvider` now calls the v2 `/calls` endpoint, injects the structured schema from `bem_schema.json`, and handles the multi-metric payloads that v2 emits.
+- Workflow slug + response behavior are configurable via `BEM_WORKFLOW_NAME` / `BEM_FUNCTION_NAME`; payload text is base64-encoded per BEM's `singleFile.inputContent` contract, and we poll `/v2/calls/{callID}` so `transformedContent` is available synchronously for downstream normalization.
+- Section lists (highlights / asks / challenges) and contact records are normalized so the downstream pipeline still receives arrays.
+- Confidence + metric dictionaries are keyed by slugged metric names to keep the hybrid merge path deterministic.
+- Secrets stay outside git: `bem_config.json` remains local-only and `.gitignore` now blocks it by default.
+- Added `samples/bem_eval_samples.json` with the curated Gmail IDs (Leasy, AltScore, Shippify, Vertebra, MOX, Nuvocargo, PayMon, Aloja) plus the `lpupdate bem-sample-run` CLI helper that runs any provider on that list and dumps parsed/provider JSON under `data/provider_samples/<provider>/`.
+
 ## Why this shape
 
 This keeps the system layered:
@@ -28,17 +37,12 @@ That makes parser iteration safer and auditable.
 
 ## Immediate next step
 
-Wire the real bem endpoint details into `src/lpupdate/parsers/bem.py`.
+Run `lpupdate bem-sample-run --provider bem` (and again with `--provider hybrid`) to collect v2 baselines for the curated sample set. Use those outputs to compare against the existing `rules` results.
 
-Right now the scaffold expects:
-- `BEM_API_URL`
-- `BEM_API_KEY`
-
-And POSTs a JSON payload containing:
-- message metadata
-- body text
-- attachment text
-- a target extraction schema
+While doing that, focus on:
+- verifying schema coverage (company/period/sections) across each sample
+- ensuring metrics arrays return more than one record when present in the deck/email
+- capturing any hallucinations or missing sections in the provider output JSON
 
 ## Recommended first bem workflow
 
@@ -59,8 +63,9 @@ Suggested output:
   - `numeric_value`
   - `unit`
   - `period`
-  - `confidence`
   - `source_excerpt`
+
+(This schema lives in `bem_schema.json` and can be overridden via `BEM_SCHEMA_PATH`.)
 
 ## Evaluation plan
 
@@ -71,12 +76,19 @@ Test first on a mixed batch:
 - Vertebra
 - MOX
 - Nuvocargo
+- PayMon
+- Aloja
+
+Command:
+```bash
+LPUPDATE_PARSE_PROVIDER=bem lpupdate bem-sample-run
+LPUPDATE_PARSE_PROVIDER=hybrid lpupdate bem-sample-run --provider hybrid
+```
 
 For each message compare:
 - company detection
 - period detection
-- metric count
-- critical metric coverage
+- metric count / coverage
 - bad/hallucinated metrics
 - section quality for highlights / asks / risks
 

@@ -1,0 +1,34 @@
+{
+  "startup": {
+    "slug": "stride-conductor",
+    "canonical_name": "Stride Conductor",
+    "investment_vehicles": [],
+    "latest_report": {
+      "report_id": "fathom_129172387",
+      "period_label": null,
+      "received_at": "2026-03-11T19:55:17Z",
+      "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
+      "detail_path": "startups/stride-conductor/fathom-129172387-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 2
+  },
+  "reports": [
+    {
+      "report_id": "fathom_129172387",
+      "period_label": null,
+      "received_at": "2026-03-11T19:55:17Z",
+      "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
+      "detail_path": "startups/stride-conductor/fathom-129172387-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_123781831",
+      "period_label": null,
+      "received_at": "2026-02-19T18:01:07Z",
+      "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
+      "detail_path": "startups/stride-conductor/fathom-123781831-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

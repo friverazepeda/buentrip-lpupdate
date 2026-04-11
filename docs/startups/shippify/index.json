@@ -1,0 +1,28 @@
+{
+  "startup": {
+    "slug": "shippify",
+    "canonical_name": "Shippify",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "19cf27c1a4c1b3b5",
+      "period_label": "January 2026",
+      "received_at": "Sun, 15 Mar 2026 12:12:10 -0500",
+      "subject": "Fwd: Shippify BOD Update - January 2026",
+      "detail_path": "startups/shippify/19cf27c1a4c1b3b5-january-2026.html",
+      "source_type": "gmail"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "19cf27c1a4c1b3b5",
+      "period_label": "January 2026",
+      "received_at": "Sun, 15 Mar 2026 12:12:10 -0500",
+      "subject": "Fwd: Shippify BOD Update - January 2026",
+      "detail_path": "startups/shippify/19cf27c1a4c1b3b5-january-2026.html",
+      "source_type": "gmail"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "startup": {
+    "slug": "wava",
+    "canonical_name": "Wava",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund II"
+    ],
+    "latest_report": {
+      "report_id": "fathom_130201255",
+      "period_label": null,
+      "received_at": "2026-03-16T16:40:59Z",
+      "subject": "Fathom Call: Wava<>BTV Check-in",
+      "detail_path": "startups/wava/fathom-130201255-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 3
+  },
+  "reports": [
+    {
+      "report_id": "fathom_130201255",
+      "period_label": null,
+      "received_at": "2026-03-16T16:40:59Z",
+      "subject": "Fathom Call: Wava<>BTV Check-in",
+      "detail_path": "startups/wava/fathom-130201255-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_115290607",
+      "period_label": "Q4 2025",
+      "received_at": "2026-01-19T16:31:56Z",
+      "subject": "Fathom Call: Wava<>BTV Check-in",
+      "detail_path": "startups/wava/fathom-115290607-q4-2025.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_108740523",
+      "period_label": "December 2025",
+      "received_at": "2025-12-15T16:29:04Z",
+      "subject": "Fathom Call: Wava<>BTV Check-in",
+      "detail_path": "startups/wava/fathom-108740523-december-2025.html",
+      "source_type": "fathom"
+    }
+  ]
+}

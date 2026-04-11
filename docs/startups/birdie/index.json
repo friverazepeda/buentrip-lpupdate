@@ -1,0 +1,84 @@
+{
+  "startup": {
+    "slug": "birdie",
+    "canonical_name": "Birdie",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund II"
+    ],
+    "latest_report": {
+      "report_id": "19ce363e43d3abef",
+      "period_label": "Q4 2025",
+      "received_at": "Thu, 12 Mar 2026 13:51:28 -0500",
+      "subject": "Fwd: Birdie Q4 2025 Investor Update",
+      "detail_path": "startups/birdie/19ce363e43d3abef-q4-2025.html",
+      "source_type": "gmail"
+    },
+    "report_count": 8
+  },
+  "reports": [
+    {
+      "report_id": "19ce363e43d3abef",
+      "period_label": "Q4 2025",
+      "received_at": "Thu, 12 Mar 2026 13:51:28 -0500",
+      "subject": "Fwd: Birdie Q4 2025 Investor Update",
+      "detail_path": "startups/birdie/19ce363e43d3abef-q4-2025.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "fathom_133510173",
+      "period_label": null,
+      "received_at": "2026-03-27T17:35:56Z",
+      "subject": "Fathom Call: Birdie monthly BTV",
+      "detail_path": "startups/birdie/fathom-133510173-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_126025989",
+      "period_label": null,
+      "received_at": "2026-02-27T17:23:17Z",
+      "subject": "Fathom Call: Birdie monthly BTV",
+      "detail_path": "startups/birdie/fathom-126025989-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_119701000",
+      "period_label": null,
+      "received_at": "2026-02-04T16:41:46Z",
+      "subject": "Fathom Call: Birdie monthly BTV",
+      "detail_path": "startups/birdie/fathom-119701000-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_115402757",
+      "period_label": null,
+      "received_at": "2026-01-19T21:58:53Z",
+      "subject": "Fathom Call: Sobre sigma. Birdie",
+      "detail_path": "startups/birdie/fathom-115402757-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_114974926",
+      "period_label": null,
+      "received_at": "2026-01-16T18:59:12Z",
+      "subject": "Fathom Call: Birdie<>BuenTrip Onboarding",
+      "detail_path": "startups/birdie/fathom-114974926-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_107536691",
+      "period_label": null,
+      "received_at": "2025-12-09T22:42:24Z",
+      "subject": "Fathom Call: Impromptu Google Meet Meeting",
+      "detail_path": "startups/birdie/fathom-107536691-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_105562085",
+      "period_label": null,
+      "received_at": "2025-12-02T16:03:16Z",
+      "subject": "Fathom Call: New demo+strategy Birdie",
+      "detail_path": "startups/birdie/fathom-105562085-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

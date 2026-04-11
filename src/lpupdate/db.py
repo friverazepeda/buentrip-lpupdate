@@ -20,8 +20,11 @@ def apply_schema(database_url: str) -> None:
         conn.commit()
 
 
-def upsert_company(cur, canonical_name: str) -> int:
-    canonical_name = canonicalize_company_name(canonical_name) or canonical_name
+def upsert_company(cur, raw_name: str) -> int | None:
+    canonical_name = canonicalize_company_name(raw_name)
+    if not canonical_name:
+        return None
+        
     vehicles = vehicles_for_company(canonical_name)
     cur.execute(
         """
@@ -208,7 +211,10 @@ def get_company_metrics(database_url: str, company_name: str) -> list[dict[str, 
             return list(cur.fetchall())
 
 
-def upsert_quarterly_update(cur, email_message_id: int, company_id: int | None, record: dict[str, Any]) -> int:
+def upsert_quarterly_update(cur, email_message_id: int, company_id: int | None, record: dict[str, Any]) -> int | None:
+    if not company_id:
+        return None
+        
     cur.execute(
         """
         INSERT INTO quarterly_updates (

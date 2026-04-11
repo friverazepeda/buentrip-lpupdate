@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BuenTrip Reports</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; color: #333; }
+        h1, h2, h3 { color: #111; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .list-group { list-style: none; padding: 0; }
+        .list-group li { padding: 8px 0; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <h1>BuenTrip Ventures - Reporting</h1>
+    <p><a href="/admin/">⚙️ Go to Admin Dashboard</a></p>
+
+    <h2>Startups</h2>
+    <ul class="list-group">
+        {% for startup in startups %}
+            <li><a href="{% url 'dashboard:startup_detail' startup.id %}">{{ startup.name }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

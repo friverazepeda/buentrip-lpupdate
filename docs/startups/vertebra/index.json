@@ -1,0 +1,44 @@
+{
+  "startup": {
+    "slug": "vertebra",
+    "canonical_name": "Vertebra",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund II"
+    ],
+    "latest_report": {
+      "report_id": "19cf27b9c9816ea6",
+      "period_label": "Q1 2026",
+      "received_at": "Sun, 15 Mar 2026 12:11:38 -0500",
+      "subject": "Fwd: Vertebra x BTV review",
+      "detail_path": "startups/vertebra/19cf27b9c9816ea6-q1-2026.html",
+      "source_type": "gmail"
+    },
+    "report_count": 3
+  },
+  "reports": [
+    {
+      "report_id": "19cf27b9c9816ea6",
+      "period_label": "Q1 2026",
+      "received_at": "Sun, 15 Mar 2026 12:11:38 -0500",
+      "subject": "Fwd: Vertebra x BTV review",
+      "detail_path": "startups/vertebra/19cf27b9c9816ea6-q1-2026.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "fathom_129203647",
+      "period_label": null,
+      "received_at": "2026-03-11T21:48:28Z",
+      "subject": "Fathom Call: Vertebra<>BTV check-in",
+      "detail_path": "startups/vertebra/fathom-129203647-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_114221610",
+      "period_label": null,
+      "received_at": "2026-01-14T16:38:23Z",
+      "subject": "Fathom Call: Vertebra<>BTV check-in",
+      "detail_path": "startups/vertebra/fathom-114221610-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

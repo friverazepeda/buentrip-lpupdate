@@ -42,9 +42,24 @@ def extract_code_from_redirect_url(value: str) -> str:
 class GmailClientConfig:
     client_secret_file: str | None
     token_file: str | None
+    service_account_file: str | None = None
+    service_account_subject: str | None = None
 
 
 def get_credentials(cfg: GmailClientConfig):
+    from google.oauth2 import service_account
+
+    if cfg.service_account_file:
+        sa_path = Path(cfg.service_account_file)
+        if not sa_path.exists():
+            raise FileNotFoundError(f"Missing Service Account file: {sa_path}")
+        creds = service_account.Credentials.from_service_account_file(
+            str(sa_path), scopes=SCOPES
+        )
+        if cfg.service_account_subject:
+            creds = creds.with_subject(cfg.service_account_subject)
+        return creds
+
     creds = None
     token_path = Path(cfg.token_file) if cfg.token_file else None
     client_secret_path = Path(cfg.client_secret_file) if cfg.client_secret_file else None

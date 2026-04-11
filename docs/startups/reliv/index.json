@@ -1,0 +1,36 @@
+{
+  "startup": {
+    "slug": "reliv",
+    "canonical_name": "Reliv",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "fathom_112547278",
+      "period_label": null,
+      "received_at": "2026-01-07T19:54:20Z",
+      "subject": "Fathom Call: BTV<>Reliv Check-in",
+      "detail_path": "startups/reliv/fathom-112547278-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 2
+  },
+  "reports": [
+    {
+      "report_id": "fathom_112547278",
+      "period_label": null,
+      "received_at": "2026-01-07T19:54:20Z",
+      "subject": "Fathom Call: BTV<>Reliv Check-in",
+      "detail_path": "startups/reliv/fathom-112547278-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_108224363",
+      "period_label": null,
+      "received_at": "2025-12-11T23:03:12Z",
+      "subject": "Fathom Call: Sesion Extraordinaria Reliv",
+      "detail_path": "startups/reliv/fathom-108224363-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

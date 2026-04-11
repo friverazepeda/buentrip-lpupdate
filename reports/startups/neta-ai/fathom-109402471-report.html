@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Neta AI — Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; line-height: 1.5; }
+    h1, h2 { color: #16324f; }
+    .meta { color: #555; margin-bottom: 24px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 18px 0; }
+    table.metrics { width: 100%; border-collapse: collapse; }
+    table.metrics th, table.metrics td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    table.metrics th { width: 32%; background: #f7f7f7; }
+    .small { font-size: 0.92em; color: #666; }
+    .vehicle-pill { display: inline-block; margin: 4px 8px 0 0; padding: 6px 10px; border-radius: 999px; font-size: 0.92em; font-weight: 600; }
+    .vehicle-fund { background: #e8f1ff; color: #16324f; }
+    .vehicle-spv { background: #eef8ea; color: #245c2a; }
+  </style>
+</head>
+<body>
+  <p><a href="../index.html">← Back to Neta AI reports</a></p>
+  <h1>Neta AI</h1>
+  <div class="meta">
+    <div><strong>Report period:</strong> Unknown</div>
+    <div><strong>Received at:</strong> 2025-12-17T15:48:59Z</div>
+    <div><strong>Subject:</strong> Fathom Call: Neta AI (Lemi) and Fernando Rivera</div>
+    <div><strong>Gmail message id:</strong> fathom_109402471</div>
+    <div><strong>Attachment text present:</strong> False</div>
+    <div><strong>Investment vehicles:</strong> <span class="vehicle-pill vehicle-fund">BuenTrip Ventures Fund II</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Summary</h2>
+    <p>This document is a transcript of a Fathom meeting recording between Fernando Rivera from BuenTrip Ventures and Lemmy, the technical advisor at Neta AI. The discussion primarily revolves around Neta AI&#x27;s technical architecture, software development process, data pipeline, and future team building plans. Lemmy details Neta AI&#x27;s current monolithic architecture, deployment on Render, use of Qugent as a vector database, and Postgres for the main database. He explains the data ingestion process, including scraping techniques and summarization using GPT 5.1. The conversation also covers their software development methodology, which is a flexible approach combining elements of Scrum and Agile, and their testing strategy focusing on core components rather than 100% coverage. Grace, from Neta AI, also discusses the hiring strategy, with a focus on bringing in a founding engineer and potentially fractional data regulation experts and data analysts.</p>
+  </div>
+
+  <div class="card">
+    <h2>Key Metrics</h2>
+    <p>No structured metrics extracted yet.</p>
+  </div>
+
+  <div class="card">
+    <h2>Highlights</h2>
+    <ul><li>Neta AI is currently built as a monolith and deployed on Render, prioritizing productivity and scalability with compliance features. They use Qugent as their vector database and Postgres for their main database. The data pipeline involves scraping various sources, processing data, and generating summaries using GPT 5.1. Their software development process is agile, with frequent communication between Grace and Lemmy, using Linear for task management and GitHub for code hosting. They have a strong focus on unit tests for core components and a pragmatic approach to test coverage. They are actively looking to hire a founding engineer to transition Lemmy into a more advisory role.</li></ul>
+  </div>
+
+  <div class="card">
+    <h2>Asks</h2>
+    <ul><li>Neta AI is looking for a founding engineer with full-stack capabilities to build upon the existing architecture. They are also considering engaging fractional data regulation experts and data analysts to ensure accurate understanding of regulations and data matching.</li></ul>
+  </div>
+
+  <div class="card">
+    <h2>Risks</h2>
+    <ul><li>Neta AI is in transition from an MVP to a more scalable product. They face challenges with bot mitigation strategies on websites during data scraping, which they address with Playwright and proxy services. They are also cost-conscious regarding data access and processing. The team is small, with Grace and Lemmy, plus two interns, which means they need to be scrappy and prioritize features over extensive processes like formal staging environments or 100% test coverage. They are also working on finalizing a schema for automated legal instrument imports to reduce manual work.</li></ul>
+  </div>
+</body>
+</html>

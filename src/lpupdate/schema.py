@@ -4,11 +4,25 @@ CREATE TABLE IF NOT EXISTS companies (
   canonical_name TEXT NOT NULL UNIQUE,
   aliases JSONB NOT NULL DEFAULT '[]'::jsonb,
   vehicles_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+  fund TEXT,
+  one_liner TEXT,
+  sector TEXT,
+  business_model TEXT,
+  founder_emails TEXT,
+  female_founder TEXT,
+  sub_segment TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE companies
-  ADD COLUMN IF NOT EXISTS vehicles_json JSONB NOT NULL DEFAULT '[]'::jsonb;
+  ADD COLUMN IF NOT EXISTS vehicles_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS fund TEXT,
+  ADD COLUMN IF NOT EXISTS one_liner TEXT,
+  ADD COLUMN IF NOT EXISTS sector TEXT,
+  ADD COLUMN IF NOT EXISTS business_model TEXT,
+  ADD COLUMN IF NOT EXISTS founder_emails TEXT,
+  ADD COLUMN IF NOT EXISTS female_founder TEXT,
+  ADD COLUMN IF NOT EXISTS sub_segment TEXT;
 
 CREATE TABLE IF NOT EXISTS email_messages (
   id BIGSERIAL PRIMARY KEY,

@@ -1,0 +1,36 @@
+{
+  "startup": {
+    "slug": "mercately",
+    "canonical_name": "Mercately",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "fathom_133484208",
+      "period_label": null,
+      "received_at": "2026-03-27T16:30:54Z",
+      "subject": "Fathom Call: Mercately Check in:: BTV",
+      "detail_path": "startups/mercately/fathom-133484208-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 2
+  },
+  "reports": [
+    {
+      "report_id": "fathom_133484208",
+      "period_label": null,
+      "received_at": "2026-03-27T16:30:54Z",
+      "subject": "Fathom Call: Mercately Check in:: BTV",
+      "detail_path": "startups/mercately/fathom-133484208-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_116713736",
+      "period_label": null,
+      "received_at": "2026-01-23T16:34:26Z",
+      "subject": "Fathom Call: Mercately Check in:: BTV",
+      "detail_path": "startups/mercately/fathom-116713736-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

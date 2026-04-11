@@ -1,0 +1,29 @@
+{
+  "startup": {
+    "slug": "altscore",
+    "canonical_name": "AltScore",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I",
+      "BTV AltScore Series A"
+    ],
+    "latest_report": {
+      "report_id": "19cf27e0c87ba7bc",
+      "period_label": "Q4 2025",
+      "received_at": "Sun, 15 Mar 2026 12:14:21 -0500",
+      "subject": "Fwd: AltScore Investor/Internal Update [061]: Q4 2025 Review",
+      "detail_path": "startups/altscore/19cf27e0c87ba7bc-q4-2025.html",
+      "source_type": "gmail"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "19cf27e0c87ba7bc",
+      "period_label": "Q4 2025",
+      "received_at": "Sun, 15 Mar 2026 12:14:21 -0500",
+      "subject": "Fwd: AltScore Investor/Internal Update [061]: Q4 2025 Review",
+      "detail_path": "startups/altscore/19cf27e0c87ba7bc-q4-2025.html",
+      "source_type": "gmail"
+    }
+  ]
+}

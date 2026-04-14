@@ -3,7 +3,7 @@ import django
 import json
 import psycopg
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from dashboard.models import Firm, Vehicle, Startup, VehicleStartup, StartupUpdate, StartupMetric

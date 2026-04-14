@@ -1,5 +1,7 @@
 # Web Split Migration Plan
 
+> Historical migration-plan document. It describes the pre-split state and phased migration approach used during the `web/` -> `config/` + `frontend/` transition.
+
 ## Summary
 
 The repo currently has a mixed `web/` directory that contains both:

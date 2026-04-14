@@ -2,6 +2,17 @@
 
 This document describes what is in the repo today, what is actively used, and what appears experimental.
 
+## Source-of-Truth Directories
+
+Current source-of-truth project layout:
+
+- `config/` - Django project configuration module
+- `frontend/` - Next.js frontend application
+- `scripts/` - standalone utility/maintenance scripts
+- `src/` - core pipeline/runtime Python package (`lpupdate`)
+- `dashboard/` - Django app (models/views/admin/templates)
+- `docs/` - documentation and migration notes
+
 ## 1) What runs in `src/lpupdate`
 
 `src/lpupdate` is the Python ingestion + parsing + sync + report generation pipeline.

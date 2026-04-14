@@ -1,5 +1,7 @@
 # Web Directory Classification
 
+> Historical snapshot. This classification reflects `web/` contents during frontend extraction planning and is not the current active source-of-truth layout.
+
 Analysis of top-level items currently remaining in `web/`.
 
 ## Item-by-item classification

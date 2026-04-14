@@ -43,7 +43,7 @@ From the files:
 - `dashboard/urls.py` maps those views.
 - `dashboard/admin.py` and `templates/` support admin/UI rendering.
 
-Django project URL config is in `web/urls.py` (project module). It mounts:
+Django project URL config is in `config/urls.py` (project module). It mounts:
 
 - `dashboard.urls` at `/`,
 - Django admin at `/admin/`,

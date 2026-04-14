@@ -124,16 +124,38 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
             if any(company in title for company in known_companies):
                 matched.append(m)
         meetings = matched
+        
     data_dir = ensure_data_dir("data/raw_fathom")
     fetched = []
+    
+    # We do a second pass to inject the matched company name into the raw json
+    # so that the rules parser doesn't have to guess it blindly from the text.
+    from .db import list_companies
+    rows = list_companies(settings.database_url)
+    known_companies_raw = [r['canonical_name'] for r in rows] if rows else []
+    
+    from .vehicles import canonicalize_company_name
+    
     for item in meetings:
         normalized = normalize_fathom_meeting(item)
+        
+        title = (item.get('title') or '').lower()
+        matched_company = None
+        for company in known_companies_raw:
+            if company.lower() in title:
+                matched_company = canonicalize_company_name(company)
+                break
+                
+        if matched_company:
+            normalized['company_name_hint'] = matched_company
+            
         mid = normalized['gmail_message_id']
         path = data_dir / f"{mid}.json"
         write_json(path, normalized)
         fetched.append({
             'fathom_id': mid,
             'title': item.get('title'),
+            'company': matched_company,
             'recorded_by': normalized['from_address'],
             'date': normalized['received_at'],
             'path': str(path)
@@ -443,6 +465,33 @@ def cmd_show_attachment_text(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run_pipeline(args: argparse.Namespace) -> int:
+    print("=== Running Full Pipeline ===")
+    
+    print("\n--- 1. Fetching Fathom Meetings ---")
+    ret = cmd_fathom_fetch(args)
+    if ret != 0:
+        print("Warning: Fathom fetch failed or incomplete.")
+        
+    print("\n--- 2. Fetching Gmail Updates ---")
+    ret = cmd_gmail_fetch(args)
+    if ret != 0:
+        print("Warning: Gmail fetch failed or incomplete.")
+        
+    print("\n--- 3. Parsing Raw Data (Gmail + Fathom) ---")
+    ret = cmd_parse_raw(args)
+    if ret != 0: return ret
+    
+    print("\n--- 4. Syncing to Postgres ---")
+    ret = cmd_sync_postgres(args)
+    if ret != 0: return ret
+    
+    print("\n--- 5. Generating Reports ---")
+    ret = cmd_generate_report(args)
+    
+    print("\n=== Pipeline Complete ===")
+    return ret
+
 def cmd_generate_report(_: argparse.Namespace) -> int:
     parsed_dir = ensure_data_dir('data/parsed_updates')
     out_dir = ensure_data_dir('reports')
@@ -530,6 +579,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("generate-report", help="generate static one-page-per-startup report site")
     p.set_defaults(func=cmd_generate_report)
+
+    p = sub.add_parser("run-pipeline", help="run the complete pipeline (fathom + gmail -> parse -> sync -> report)")
+    p.add_argument("--limit", type=int, default=0, help="limit for fetching and parsing (0 for no limit)")
+    p.add_argument("--title-match", default=None, help="Only import meetings with this substring in the title")
+    p.add_argument("--company-match", action="store_true", help="Only import meetings whose title contains a known company name from Postgres")
+    p.add_argument("--created-after", default=None, help="ISO timestamp (e.g. 2025-12-01T00:00:00Z) to filter meetings")
+    p.add_argument("--source", choices=['all', 'gmail', 'fathom'], default='all', help="which source to parse/sync")
+    p.add_argument("--throttle-seconds", type=float, default=0.0, help="Seconds to sleep between parses")
+    p.add_argument("--provider", choices=["bem", "hybrid", "rules"], default="hybrid", help="which provider to use for parsing")
+    p.set_defaults(func=cmd_run_pipeline)
 
     p = sub.add_parser("print-schema", help="print proposed Postgres schema")
     p.set_defaults(func=cmd_print_schema)

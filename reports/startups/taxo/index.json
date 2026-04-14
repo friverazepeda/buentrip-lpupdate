@@ -1,0 +1,36 @@
+{
+  "startup": {
+    "slug": "taxo",
+    "canonical_name": "Taxo",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "fathom_118238870",
+      "period_label": null,
+      "received_at": "2026-01-29T17:34:14Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/taxo/fathom-118238870-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 2
+  },
+  "reports": [
+    {
+      "report_id": "fathom_118238870",
+      "period_label": null,
+      "received_at": "2026-01-29T17:34:14Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/taxo/fathom-118238870-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_104838006",
+      "period_label": null,
+      "received_at": "2025-11-27T17:43:38Z",
+      "subject": "Fathom Call: taxo Check-in",
+      "detail_path": "startups/taxo/fathom-104838006-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

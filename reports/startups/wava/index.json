@@ -13,7 +13,7 @@
       "detail_path": "startups/wava/fathom-130201255-report.html",
       "source_type": "fathom"
     },
-    "report_count": 3
+    "report_count": 4
   },
   "reports": [
     {
@@ -34,10 +34,18 @@
     },
     {
       "report_id": "fathom_108740523",
-      "period_label": "December 2025",
+      "period_label": null,
       "received_at": "2025-12-15T16:29:04Z",
       "subject": "Fathom Call: Wava<>BTV Check-in",
-      "detail_path": "startups/wava/fathom-108740523-december-2025.html",
+      "detail_path": "startups/wava/fathom-108740523-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_102144226",
+      "period_label": null,
+      "received_at": "2025-11-17T16:31:55Z",
+      "subject": "Fathom Call: Wava<>BTV Check-in",
+      "detail_path": "startups/wava/fathom-102144226-report.html",
       "source_type": "fathom"
     }
   ]

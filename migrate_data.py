@@ -45,14 +45,14 @@ def run_migration():
 
             print(f"Migrated {len(company_map)} startups.")
 
-            cur.execute("SELECT id, company_id, report_period_label, report_quarter, report_year, summary, metrics_json, highlights_json, asks_json FROM quarterly_updates;")
+            cur.execute("SELECT id, company_id, report_period_label, report_quarter, report_year, summary, metrics_json, highlights_json, asks_json, received_at FROM quarterly_updates;")
             updates_data = cur.fetchall()
 
             reports_created = 0
             metrics_created = 0
 
             for row in updates_data:
-                old_id, company_id, label, quarter, year, summary, metrics_json, highlights_json, asks_json = row
+                old_id, company_id, label, quarter, year, summary, metrics_json, highlights_json, asks_json, received_at = row
                 
                 if not company_id:
                     continue
@@ -61,9 +61,14 @@ def run_migration():
                 if not startup:
                     continue
                     
-                if not quarter:
-                    quarter = "Q?"
-                if not year:
+                if not quarter or str(quarter).startswith("U-"):
+                    if received_at:
+                        year = received_at.year
+                        quarter = f"Q{(received_at.month - 1) // 3 + 1}"
+                    else:
+                        quarter = "NA"
+                        year = 0
+                elif not year:
                     year = 0
                     
                 if isinstance(metrics_json, str):
@@ -92,6 +97,7 @@ def run_migration():
                             'highlights': json.dumps(highlights_json) if highlights_json else '',
                             'asks': json.dumps(asks_json) if asks_json else '',
                             'period_label': label,
+                            'received_at': received_at,
                         }
                     )
                     
@@ -100,6 +106,8 @@ def run_migration():
                         report.highlights = json.dumps(highlights_json) if highlights_json else ''
                         report.asks = json.dumps(asks_json) if asks_json else ''
                         report.period_label = label
+                        if received_at:
+                            report.received_at = received_at
                         report.save()
                     
                     if created:

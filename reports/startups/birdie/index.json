@@ -13,7 +13,7 @@
       "detail_path": "startups/birdie/19ce363e43d3abef-q4-2025.html",
       "source_type": "gmail"
     },
-    "report_count": 8
+    "report_count": 9
   },
   "reports": [
     {
@@ -62,6 +62,14 @@
       "received_at": "2026-01-16T18:59:12Z",
       "subject": "Fathom Call: Birdie<>BuenTrip Onboarding",
       "detail_path": "startups/birdie/fathom-114974926-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_107865338",
+      "period_label": null,
+      "received_at": "2025-12-10T21:31:37Z",
+      "subject": "Fathom Call: Sobre Birdie",
+      "detail_path": "startups/birdie/fathom-107865338-report.html",
       "source_type": "fathom"
     },
     {

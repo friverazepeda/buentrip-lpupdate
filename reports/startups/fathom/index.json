@@ -11,7 +11,7 @@
       "detail_path": "startups/fathom/fathom-133186355-report.html",
       "source_type": "fathom"
     },
-    "report_count": 3
+    "report_count": 2
   },
   "reports": [
     {
@@ -28,14 +28,6 @@
       "received_at": "2026-02-26T17:44:34Z",
       "subject": "Fathom Call: taxo Check-in",
       "detail_path": "startups/fathom/fathom-125686026-report.html",
-      "source_type": "fathom"
-    },
-    {
-      "report_id": "fathom_118238870",
-      "period_label": null,
-      "received_at": "2026-01-29T17:34:14Z",
-      "subject": "Fathom Call: taxo Check-in",
-      "detail_path": "startups/fathom/fathom-118238870-report.html",
       "source_type": "fathom"
     }
   ]

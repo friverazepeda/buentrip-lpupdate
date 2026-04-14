@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-28T19:08:52.175777+00:00",
+  "generated_at": "2026-04-14T00:16:42.545656+00:00",
   "vehicle_groups": [
     {
       "title": "BTV AltScore Series A",
       "startups": [
         {
           "slug": "altscore",
-          "canonical_name": "AltScore",
+          "canonical_name": "Altscore",
           "investment_vehicles": [
             "BuenTrip Ventures Fund I",
             "BTV AltScore Series A"
@@ -69,7 +69,7 @@
       "startups": [
         {
           "slug": "leasy",
-          "canonical_name": "LEASY",
+          "canonical_name": "Leasy",
           "investment_vehicles": [
             "BuenTrip Ventures Fund I"
           ],
@@ -169,7 +169,7 @@
         },
         {
           "slug": "altscore",
-          "canonical_name": "AltScore",
+          "canonical_name": "Altscore",
           "investment_vehicles": [
             "BuenTrip Ventures Fund I",
             "BTV AltScore Series A"
@@ -190,6 +190,235 @@
               "subject": "Fwd: AltScore Investor/Internal Update [061]: Q4 2025 Review",
               "detail_path": "startups/altscore/19cf27e0c87ba7bc-q4-2025.html",
               "source_type": "gmail"
+            }
+          ]
+        },
+        {
+          "slug": "airpals",
+          "canonical_name": "Airpals",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund I"
+          ],
+          "latest_report": {
+            "report_id": "19d88b3e4505e2d9",
+            "period_label": "March 2026",
+            "received_at": "Mon, 13 Apr 2026 16:16:11 -0500",
+            "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: March 2026",
+            "detail_path": "startups/airpals/19d88b3e4505e2d9-march-2026.html",
+            "source_type": "gmail"
+          },
+          "reports": [
+            {
+              "report_id": "19d88b3e4505e2d9",
+              "period_label": "March 2026",
+              "received_at": "Mon, 13 Apr 2026 16:16:11 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: March 2026",
+              "detail_path": "startups/airpals/19d88b3e4505e2d9-march-2026.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d34f51aedc14e0",
+              "period_label": "October 2025",
+              "received_at": "Sat, 28 Mar 2026 09:59:19 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: October 2025",
+              "detail_path": "startups/airpals/19d34f51aedc14e0-october-2025.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d34f4d0901511b",
+              "period_label": "September 2025",
+              "received_at": "Sat, 28 Mar 2026 09:59:00 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: September 2025",
+              "detail_path": "startups/airpals/19d34f4d0901511b-september-2025.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d34f49c6ba3062",
+              "period_label": "November 2025",
+              "received_at": "Sat, 28 Mar 2026 09:58:47 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: November 2025",
+              "detail_path": "startups/airpals/19d34f49c6ba3062-november-2025.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d34f47bbd29a93",
+              "period_label": "December 2025",
+              "received_at": "Sat, 28 Mar 2026 09:58:39 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: December 2025",
+              "detail_path": "startups/airpals/19d34f47bbd29a93-december-2025.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d34f450fa081d1",
+              "period_label": null,
+              "received_at": "Sat, 28 Mar 2026 09:58:27 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: 2025 Wrapped!",
+              "detail_path": "startups/airpals/19d34f450fa081d1-report.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d34ef2a9b551d6",
+              "period_label": null,
+              "received_at": "Sat, 28 Mar 2026 09:52:49 -0500",
+              "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: Jan + Feb 2026",
+              "detail_path": "startups/airpals/19d34ef2a9b551d6-report.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "fathom_120459143",
+              "period_label": null,
+              "received_at": "2026-02-06T17:44:12Z",
+              "subject": "Fathom Call: Airpals<>BTV check-in",
+              "detail_path": "startups/airpals/fathom-120459143-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_101803947",
+              "period_label": null,
+              "received_at": "2025-11-14T17:45:53Z",
+              "subject": "Fathom Call: Airpals<>BTV check-in",
+              "detail_path": "startups/airpals/fathom-101803947-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
+          "slug": "mercately",
+          "canonical_name": "Mercately",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund I"
+          ],
+          "latest_report": {
+            "report_id": "fathom_133484208",
+            "period_label": null,
+            "received_at": "2026-03-27T16:30:54Z",
+            "subject": "Fathom Call: Mercately Check in:: BTV",
+            "detail_path": "startups/mercately/fathom-133484208-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_133484208",
+              "period_label": null,
+              "received_at": "2026-03-27T16:30:54Z",
+              "subject": "Fathom Call: Mercately Check in:: BTV",
+              "detail_path": "startups/mercately/fathom-133484208-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_116713736",
+              "period_label": null,
+              "received_at": "2026-01-23T16:34:26Z",
+              "subject": "Fathom Call: Mercately Check in:: BTV",
+              "detail_path": "startups/mercately/fathom-116713736-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_103506236",
+              "period_label": null,
+              "received_at": "2025-11-21T16:50:18Z",
+              "subject": "Fathom Call: Mercately Check in:: BTV",
+              "detail_path": "startups/mercately/fathom-103506236-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
+          "slug": "picker",
+          "canonical_name": "Picker",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund I"
+          ],
+          "latest_report": {
+            "report_id": "fathom_104001295",
+            "period_label": null,
+            "received_at": "2025-11-24T21:02:37Z",
+            "subject": "Fathom Call: Carmen de la Cerda and Juan Daniel de Picker",
+            "detail_path": "startups/picker/fathom-104001295-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_104001295",
+              "period_label": null,
+              "received_at": "2025-11-24T21:02:37Z",
+              "subject": "Fathom Call: Carmen de la Cerda and Juan Daniel de Picker",
+              "detail_path": "startups/picker/fathom-104001295-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
+          "slug": "pardux",
+          "canonical_name": "Pardux",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund I"
+          ],
+          "latest_report": {
+            "report_id": "fathom_130338781",
+            "period_label": null,
+            "received_at": "2026-03-16T21:31:43Z",
+            "subject": "Fathom Call: Pardux Check in :: BTV",
+            "detail_path": "startups/pardux/fathom-130338781-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_130338781",
+              "period_label": null,
+              "received_at": "2026-03-16T21:31:43Z",
+              "subject": "Fathom Call: Pardux Check in :: BTV",
+              "detail_path": "startups/pardux/fathom-130338781-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_115396769",
+              "period_label": null,
+              "received_at": "2026-01-19T21:39:29Z",
+              "subject": "Fathom Call: Pardux Check in :: BTV",
+              "detail_path": "startups/pardux/fathom-115396769-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_104015199",
+              "period_label": null,
+              "received_at": "2025-11-24T21:41:26Z",
+              "subject": "Fathom Call: Pardux Check in :: BTV",
+              "detail_path": "startups/pardux/fathom-104015199-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
+          "slug": "taxo",
+          "canonical_name": "Taxo",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund I"
+          ],
+          "latest_report": {
+            "report_id": "fathom_118238870",
+            "period_label": null,
+            "received_at": "2026-01-29T17:34:14Z",
+            "subject": "Fathom Call: taxo Check-in",
+            "detail_path": "startups/taxo/fathom-118238870-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_118238870",
+              "period_label": null,
+              "received_at": "2026-01-29T17:34:14Z",
+              "subject": "Fathom Call: taxo Check-in",
+              "detail_path": "startups/taxo/fathom-118238870-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_104838006",
+              "period_label": null,
+              "received_at": "2025-11-27T17:43:38Z",
+              "subject": "Fathom Call: taxo Check-in",
+              "detail_path": "startups/taxo/fathom-104838006-report.html",
+              "source_type": "fathom"
             }
           ]
         },
@@ -227,34 +456,26 @@
           ]
         },
         {
-          "slug": "pardux",
-          "canonical_name": "Pardux",
+          "slug": "databits",
+          "canonical_name": "Databits",
           "investment_vehicles": [
             "BuenTrip Ventures Fund I"
           ],
           "latest_report": {
-            "report_id": "fathom_130338781",
+            "report_id": "fathom_112592481",
             "period_label": null,
-            "received_at": "2026-03-16T21:31:43Z",
-            "subject": "Fathom Call: Pardux Check in :: BTV",
-            "detail_path": "startups/pardux/fathom-130338781-report.html",
+            "received_at": "2026-01-07T21:54:33Z",
+            "subject": "Fathom Call: neoDATABITS-BTV",
+            "detail_path": "startups/databits/fathom-112592481-report.html",
             "source_type": "fathom"
           },
           "reports": [
             {
-              "report_id": "fathom_130338781",
+              "report_id": "fathom_112592481",
               "period_label": null,
-              "received_at": "2026-03-16T21:31:43Z",
-              "subject": "Fathom Call: Pardux Check in :: BTV",
-              "detail_path": "startups/pardux/fathom-130338781-report.html",
-              "source_type": "fathom"
-            },
-            {
-              "report_id": "fathom_115396769",
-              "period_label": null,
-              "received_at": "2026-01-19T21:39:29Z",
-              "subject": "Fathom Call: Pardux Check in :: BTV",
-              "detail_path": "startups/pardux/fathom-115396769-report.html",
+              "received_at": "2026-01-07T21:54:33Z",
+              "subject": "Fathom Call: neoDATABITS-BTV",
+              "detail_path": "startups/databits/fathom-112592481-report.html",
               "source_type": "fathom"
             }
           ]
@@ -267,77 +488,19 @@
           ],
           "latest_report": {
             "report_id": "fathom_116476701",
-            "period_label": "January 2026",
+            "period_label": null,
             "received_at": "2026-01-22T20:07:38Z",
             "subject": "Fathom Call: Pronto::BTV",
-            "detail_path": "startups/pronto/fathom-116476701-january-2026.html",
+            "detail_path": "startups/pronto/fathom-116476701-report.html",
             "source_type": "fathom"
           },
           "reports": [
             {
               "report_id": "fathom_116476701",
-              "period_label": "January 2026",
+              "period_label": null,
               "received_at": "2026-01-22T20:07:38Z",
               "subject": "Fathom Call: Pronto::BTV",
-              "detail_path": "startups/pronto/fathom-116476701-january-2026.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "mercately",
-          "canonical_name": "Mercately",
-          "investment_vehicles": [
-            "BuenTrip Ventures Fund I"
-          ],
-          "latest_report": {
-            "report_id": "fathom_133484208",
-            "period_label": null,
-            "received_at": "2026-03-27T16:30:54Z",
-            "subject": "Fathom Call: Mercately Check in:: BTV",
-            "detail_path": "startups/mercately/fathom-133484208-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_133484208",
-              "period_label": null,
-              "received_at": "2026-03-27T16:30:54Z",
-              "subject": "Fathom Call: Mercately Check in:: BTV",
-              "detail_path": "startups/mercately/fathom-133484208-report.html",
-              "source_type": "fathom"
-            },
-            {
-              "report_id": "fathom_116713736",
-              "period_label": null,
-              "received_at": "2026-01-23T16:34:26Z",
-              "subject": "Fathom Call: Mercately Check in:: BTV",
-              "detail_path": "startups/mercately/fathom-116713736-report.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "airpals",
-          "canonical_name": "Airpals",
-          "investment_vehicles": [
-            "BuenTrip Ventures Fund I"
-          ],
-          "latest_report": {
-            "report_id": "fathom_120459143",
-            "period_label": null,
-            "received_at": "2026-02-06T17:44:12Z",
-            "subject": "Fathom Call: Airpals<>BTV check-in",
-            "detail_path": "startups/airpals/fathom-120459143-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_120459143",
-              "period_label": null,
-              "received_at": "2026-02-06T17:44:12Z",
-              "subject": "Fathom Call: Airpals<>BTV check-in",
-              "detail_path": "startups/airpals/fathom-120459143-report.html",
+              "detail_path": "startups/pronto/fathom-116476701-report.html",
               "source_type": "fathom"
             }
           ]
@@ -400,8 +563,8 @@
       "title": "BuenTrip Ventures Fund II",
       "startups": [
         {
-          "slug": "constructai",
-          "canonical_name": "ConstructAI",
+          "slug": "construct-ai",
+          "canonical_name": "Construct AI",
           "investment_vehicles": [
             "BuenTrip Ventures Fund II"
           ],
@@ -410,7 +573,7 @@
             "period_label": "February 2026",
             "received_at": "Fri, 6 Mar 2026 12:34:27 -0500",
             "subject": "Fwd: ConstructAI Monthly Update - February 2026 - Our viral moment",
-            "detail_path": "startups/constructai/19cc4373f64089de-february-2026.html",
+            "detail_path": "startups/construct-ai/19cc4373f64089de-february-2026.html",
             "source_type": "gmail"
           },
           "reports": [
@@ -419,7 +582,7 @@
               "period_label": "February 2026",
               "received_at": "Fri, 6 Mar 2026 12:34:27 -0500",
               "subject": "Fwd: ConstructAI Monthly Update - February 2026 - Our viral moment",
-              "detail_path": "startups/constructai/19cc4373f64089de-february-2026.html",
+              "detail_path": "startups/construct-ai/19cc4373f64089de-february-2026.html",
               "source_type": "gmail"
             }
           ]
@@ -471,6 +634,14 @@
               "subject": "Fwd: NETA AI \u2013 Investor Update | February 2026",
               "detail_path": "startups/neta-ai/19ce3637a3f2236b-february-2026.html",
               "source_type": "gmail"
+            },
+            {
+              "report_id": "fathom_116711983",
+              "period_label": null,
+              "received_at": "2026-01-23T16:04:57Z",
+              "subject": "Fathom Call: BuenTrip <> Neta AI - engineer recruiting process ",
+              "detail_path": "startups/neta-ai/fathom-116711983-report.html",
+              "source_type": "fathom"
             },
             {
               "report_id": "fathom_113592209",
@@ -554,6 +725,14 @@
               "source_type": "fathom"
             },
             {
+              "report_id": "fathom_107865338",
+              "period_label": null,
+              "received_at": "2025-12-10T21:31:37Z",
+              "subject": "Fathom Call: Sobre Birdie",
+              "detail_path": "startups/birdie/fathom-107865338-report.html",
+              "source_type": "fathom"
+            },
+            {
               "report_id": "fathom_107536691",
               "period_label": null,
               "received_at": "2025-12-09T22:42:24Z",
@@ -579,19 +758,19 @@
           ],
           "latest_report": {
             "report_id": "19cf27a5961737e9",
-            "period_label": null,
+            "period_label": "Q4 2025",
             "received_at": "Sun, 15 Mar 2026 12:10:18 -0500",
             "subject": "Fwd: Aloja: Q4 Investor Update \ud83d\ude80",
-            "detail_path": "startups/aloja/19cf27a5961737e9-report.html",
+            "detail_path": "startups/aloja/19cf27a5961737e9-q4-2025.html",
             "source_type": "gmail"
           },
           "reports": [
             {
               "report_id": "19cf27a5961737e9",
-              "period_label": null,
+              "period_label": "Q4 2025",
               "received_at": "Sun, 15 Mar 2026 12:10:18 -0500",
               "subject": "Fwd: Aloja: Q4 Investor Update \ud83d\ude80",
-              "detail_path": "startups/aloja/19cf27a5961737e9-report.html",
+              "detail_path": "startups/aloja/19cf27a5961737e9-q4-2025.html",
               "source_type": "gmail"
             },
             {
@@ -630,7 +809,7 @@
         },
         {
           "slug": "paymon",
-          "canonical_name": "PayMon",
+          "canonical_name": "Paymon",
           "investment_vehicles": [
             "BuenTrip Ventures Fund II"
           ],
@@ -653,11 +832,19 @@
             },
             {
               "report_id": "19cf27aa6e6ff113",
-              "period_label": null,
+              "period_label": "December 2025",
               "received_at": "Sun, 15 Mar 2026 12:10:35 -0500",
               "subject": "Fwd: PayMon Investor Update \u2013 Jan 2026 + 2025 summary: 2\u00d7 Revenue & GMV Growth; Profitability Achieved",
-              "detail_path": "startups/paymon/19cf27aa6e6ff113-report.html",
+              "detail_path": "startups/paymon/19cf27aa6e6ff113-december-2025.html",
               "source_type": "gmail"
+            },
+            {
+              "report_id": "fathom_127961736",
+              "period_label": null,
+              "received_at": "2026-03-06T20:44:47Z",
+              "subject": "Fathom Call: BTV Check-in: Paymon",
+              "detail_path": "startups/paymon/fathom-127961736-report.html",
+              "source_type": "fathom"
             },
             {
               "report_id": "fathom_120533172",
@@ -673,6 +860,14 @@
               "received_at": "2025-12-12T21:24:54Z",
               "subject": "Fathom Call: [One-Time] BTV Check-in: Paymon",
               "detail_path": "startups/paymon/fathom-108492163-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_101876076",
+              "period_label": null,
+              "received_at": "2025-11-14T20:53:58Z",
+              "subject": "Fathom Call: BTV Check-in: Paymon",
+              "detail_path": "startups/paymon/fathom-101876076-report.html",
               "source_type": "fathom"
             }
           ]
@@ -719,6 +914,88 @@
           ]
         },
         {
+          "slug": "wava",
+          "canonical_name": "Wava",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund II"
+          ],
+          "latest_report": {
+            "report_id": "fathom_130201255",
+            "period_label": null,
+            "received_at": "2026-03-16T16:40:59Z",
+            "subject": "Fathom Call: Wava<>BTV Check-in",
+            "detail_path": "startups/wava/fathom-130201255-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_130201255",
+              "period_label": null,
+              "received_at": "2026-03-16T16:40:59Z",
+              "subject": "Fathom Call: Wava<>BTV Check-in",
+              "detail_path": "startups/wava/fathom-130201255-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_115290607",
+              "period_label": "Q4 2025",
+              "received_at": "2026-01-19T16:31:56Z",
+              "subject": "Fathom Call: Wava<>BTV Check-in",
+              "detail_path": "startups/wava/fathom-115290607-q4-2025.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_108740523",
+              "period_label": null,
+              "received_at": "2025-12-15T16:29:04Z",
+              "subject": "Fathom Call: Wava<>BTV Check-in",
+              "detail_path": "startups/wava/fathom-108740523-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_102144226",
+              "period_label": null,
+              "received_at": "2025-11-17T16:31:55Z",
+              "subject": "Fathom Call: Wava<>BTV Check-in",
+              "detail_path": "startups/wava/fathom-102144226-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
+          "slug": "conductor",
+          "canonical_name": "Conductor",
+          "investment_vehicles": [
+            "BuenTrip Ventures Fund II"
+          ],
+          "latest_report": {
+            "report_id": "fathom_114331159",
+            "period_label": null,
+            "received_at": "2026-01-14T19:59:52Z",
+            "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
+            "detail_path": "startups/conductor/fathom-114331159-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_114331159",
+              "period_label": null,
+              "received_at": "2026-01-14T19:59:52Z",
+              "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
+              "detail_path": "startups/conductor/fathom-114331159-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_102931045",
+              "period_label": null,
+              "received_at": "2025-11-19T20:01:36Z",
+              "subject": "Fathom Call: [One-time]BTV Check-in Conductor",
+              "detail_path": "startups/conductor/fathom-102931045-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
           "slug": "publifyer",
           "canonical_name": "Publifyer",
           "investment_vehicles": [
@@ -760,92 +1037,26 @@
           ]
         },
         {
-          "slug": "wava",
-          "canonical_name": "Wava",
+          "slug": "bem",
+          "canonical_name": "Bem",
           "investment_vehicles": [
             "BuenTrip Ventures Fund II"
           ],
           "latest_report": {
-            "report_id": "fathom_130201255",
+            "report_id": "fathom_108115492",
             "period_label": null,
-            "received_at": "2026-03-16T16:40:59Z",
-            "subject": "Fathom Call: Wava<>BTV Check-in",
-            "detail_path": "startups/wava/fathom-130201255-report.html",
+            "received_at": "2025-12-11T18:08:39Z",
+            "subject": "Fathom Call: Quarterly Call - bem <> BuenTrip",
+            "detail_path": "startups/bem/fathom-108115492-report.html",
             "source_type": "fathom"
           },
           "reports": [
             {
-              "report_id": "fathom_130201255",
+              "report_id": "fathom_108115492",
               "period_label": null,
-              "received_at": "2026-03-16T16:40:59Z",
-              "subject": "Fathom Call: Wava<>BTV Check-in",
-              "detail_path": "startups/wava/fathom-130201255-report.html",
-              "source_type": "fathom"
-            },
-            {
-              "report_id": "fathom_115290607",
-              "period_label": "Q4 2025",
-              "received_at": "2026-01-19T16:31:56Z",
-              "subject": "Fathom Call: Wava<>BTV Check-in",
-              "detail_path": "startups/wava/fathom-115290607-q4-2025.html",
-              "source_type": "fathom"
-            },
-            {
-              "report_id": "fathom_108740523",
-              "period_label": "December 2025",
-              "received_at": "2025-12-15T16:29:04Z",
-              "subject": "Fathom Call: Wava<>BTV Check-in",
-              "detail_path": "startups/wava/fathom-108740523-december-2025.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "conductor",
-          "canonical_name": "Conductor",
-          "investment_vehicles": [
-            "BuenTrip Ventures Fund II"
-          ],
-          "latest_report": {
-            "report_id": "fathom_114331159",
-            "period_label": null,
-            "received_at": "2026-01-14T19:59:52Z",
-            "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
-            "detail_path": "startups/conductor/fathom-114331159-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_114331159",
-              "period_label": null,
-              "received_at": "2026-01-14T19:59:52Z",
-              "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
-              "detail_path": "startups/conductor/fathom-114331159-report.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "paymon",
-          "canonical_name": "Paymon",
-          "investment_vehicles": [
-            "BuenTrip Ventures Fund II"
-          ],
-          "latest_report": {
-            "report_id": "fathom_127961736",
-            "period_label": null,
-            "received_at": "2026-03-06T20:44:47Z",
-            "subject": "Fathom Call: BTV Check-in: Paymon",
-            "detail_path": "startups/paymon/fathom-127961736-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_127961736",
-              "period_label": null,
-              "received_at": "2026-03-06T20:44:47Z",
-              "subject": "Fathom Call: BTV Check-in: Paymon",
-              "detail_path": "startups/paymon/fathom-127961736-report.html",
+              "received_at": "2025-12-11T18:08:39Z",
+              "subject": "Fathom Call: Quarterly Call - bem <> BuenTrip",
+              "detail_path": "startups/bem/fathom-108115492-report.html",
               "source_type": "fathom"
             }
           ]
@@ -888,132 +1099,120 @@
       "title": "Unmapped",
       "startups": [
         {
-          "slug": "virdi",
-          "canonical_name": "VIRDI",
+          "slug": "unknown",
+          "canonical_name": "Unknown",
           "investment_vehicles": [],
           "latest_report": {
-            "report_id": "fathom_107865338",
-            "period_label": null,
-            "received_at": "2025-12-10T21:31:37Z",
-            "subject": "Fathom Call: Sobre Birdie",
-            "detail_path": "startups/virdi/fathom-107865338-report.html",
-            "source_type": "fathom"
+            "report_id": "19d889c75146541a",
+            "period_label": "March 2026",
+            "received_at": "Mon, 13 Apr 2026 20:50:43 +0000",
+            "subject": "\ud83d\udce6\u00a0 Airpals Update: March 2026",
+            "detail_path": "startups/unknown/19d889c75146541a-march-2026.html",
+            "source_type": "gmail"
           },
           "reports": [
             {
-              "report_id": "fathom_107865338",
+              "report_id": "19d889c75146541a",
+              "period_label": "March 2026",
+              "received_at": "Mon, 13 Apr 2026 20:50:43 +0000",
+              "subject": "\ud83d\udce6\u00a0 Airpals Update: March 2026",
+              "detail_path": "startups/unknown/19d889c75146541a-march-2026.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "19d889c72b467404",
+              "period_label": "March 2026",
+              "received_at": "Mon, 13 Apr 2026 20:50:43 +0000",
+              "subject": "\ud83d\udce6\u00a0 Airpals Update: March 2026",
+              "detail_path": "startups/unknown/19d889c72b467404-march-2026.html",
+              "source_type": "gmail"
+            },
+            {
+              "report_id": "fathom_137171566",
               "period_label": null,
-              "received_at": "2025-12-10T21:31:37Z",
-              "subject": "Fathom Call: Sobre Birdie",
-              "detail_path": "startups/virdi/fathom-107865338-report.html",
+              "received_at": "2026-04-10T20:58:11Z",
+              "subject": "Fathom Call: check-in Construct::BuenTrip",
+              "detail_path": "startups/unknown/fathom-137171566-report.html",
               "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "buentrip",
-          "canonical_name": "BuenTrip",
-          "investment_vehicles": [],
-          "latest_report": {
-            "report_id": "fathom_108115492",
-            "period_label": null,
-            "received_at": "2025-12-11T18:08:39Z",
-            "subject": "Fathom Call: Quarterly Call - bem <> BuenTrip",
-            "detail_path": "startups/buentrip/fathom-108115492-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
+            },
             {
-              "report_id": "fathom_108115492",
+              "report_id": "fathom_137022616",
               "period_label": null,
-              "received_at": "2025-12-11T18:08:39Z",
+              "received_at": "2026-04-10T15:07:29Z",
+              "subject": "Fathom Call: Ignacio Rosales and David Restrepo",
+              "detail_path": "startups/unknown/fathom-137022616-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_137000647",
+              "period_label": null,
+              "received_at": "2026-04-10T14:21:46Z",
+              "subject": "Fathom Call: Alex <> Sebastian Mourra (Alphana)",
+              "detail_path": "startups/unknown/fathom-137000647-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_136734485",
+              "period_label": null,
+              "received_at": "2026-04-09T16:36:56Z",
               "subject": "Fathom Call: Quarterly Call - bem <> BuenTrip",
-              "detail_path": "startups/buentrip/fathom-108115492-report.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "neodatabits-btv",
-          "canonical_name": "neoDATABITS-BTV",
-          "investment_vehicles": [],
-          "latest_report": {
-            "report_id": "fathom_112592481",
-            "period_label": null,
-            "received_at": "2026-01-07T21:54:33Z",
-            "subject": "Fathom Call: neoDATABITS-BTV",
-            "detail_path": "startups/neodatabits-btv/fathom-112592481-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_112592481",
-              "period_label": null,
-              "received_at": "2026-01-07T21:54:33Z",
-              "subject": "Fathom Call: neoDATABITS-BTV",
-              "detail_path": "startups/neodatabits-btv/fathom-112592481-report.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "buentrip-neta-ai",
-          "canonical_name": "BuenTrip <> Neta AI",
-          "investment_vehicles": [],
-          "latest_report": {
-            "report_id": "fathom_116711983",
-            "period_label": null,
-            "received_at": "2026-01-23T16:04:57Z",
-            "subject": "Fathom Call: BuenTrip <> Neta AI - engineer recruiting process ",
-            "detail_path": "startups/buentrip-neta-ai/fathom-116711983-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_116711983",
-              "period_label": null,
-              "received_at": "2026-01-23T16:04:57Z",
-              "subject": "Fathom Call: BuenTrip <> Neta AI - engineer recruiting process ",
-              "detail_path": "startups/buentrip-neta-ai/fathom-116711983-report.html",
-              "source_type": "fathom"
-            }
-          ]
-        },
-        {
-          "slug": "fathom",
-          "canonical_name": "Fathom",
-          "investment_vehicles": [],
-          "latest_report": {
-            "report_id": "fathom_133186355",
-            "period_label": null,
-            "received_at": "2026-03-26T17:55:20Z",
-            "subject": "Fathom Call: taxo Check-in",
-            "detail_path": "startups/fathom/fathom-133186355-report.html",
-            "source_type": "fathom"
-          },
-          "reports": [
-            {
-              "report_id": "fathom_133186355",
-              "period_label": null,
-              "received_at": "2026-03-26T17:55:20Z",
-              "subject": "Fathom Call: taxo Check-in",
-              "detail_path": "startups/fathom/fathom-133186355-report.html",
+              "detail_path": "startups/unknown/fathom-136734485-report.html",
               "source_type": "fathom"
             },
             {
-              "report_id": "fathom_125686026",
+              "report_id": "fathom_136734373",
               "period_label": null,
-              "received_at": "2026-02-26T17:44:34Z",
-              "subject": "Fathom Call: taxo Check-in",
-              "detail_path": "startups/fathom/fathom-125686026-report.html",
+              "received_at": "2026-04-09T17:14:28Z",
+              "subject": "Fathom Call: Quarterly Call - bem <> BuenTrip",
+              "detail_path": "startups/unknown/fathom-136734373-report.html",
               "source_type": "fathom"
             },
             {
-              "report_id": "fathom_118238870",
+              "report_id": "fathom_136316734",
               "period_label": null,
-              "received_at": "2026-01-29T17:34:14Z",
-              "subject": "Fathom Call: taxo Check-in",
-              "detail_path": "startups/fathom/fathom-118238870-report.html",
+              "received_at": "2026-04-08T16:11:46Z",
+              "subject": "Fathom Call: Charvel Chedraui and Alex Rend\u00f3n",
+              "detail_path": "startups/unknown/fathom-136316734-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_136282997",
+              "period_label": null,
+              "received_at": "2026-04-08T15:34:55Z",
+              "subject": "Fathom Call: Aloja::BTV monthly",
+              "detail_path": "startups/unknown/fathom-136282997-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_136104700",
+              "period_label": null,
+              "received_at": "2026-04-07T22:43:17Z",
+              "subject": "Fathom Call: Carmen / Diego",
+              "detail_path": "startups/unknown/fathom-136104700-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_135965298",
+              "period_label": null,
+              "received_at": "2026-04-07T16:59:18Z",
+              "subject": "Fathom Call: Alex Rend\u00f3n and Tom\u00e1s Arias",
+              "detail_path": "startups/unknown/fathom-135965298-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_135697706",
+              "period_label": null,
+              "received_at": "2026-04-06T22:14:19Z",
+              "subject": "Fathom Call: Affix - Buentrip Ventures",
+              "detail_path": "startups/unknown/fathom-135697706-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_135692321",
+              "period_label": null,
+              "received_at": "2026-04-06T21:08:14Z",
+              "subject": "Fathom Call: Ignacio Rosales and Ash Straughn",
+              "detail_path": "startups/unknown/fathom-135692321-report.html",
               "source_type": "fathom"
             }
           ]
@@ -1091,6 +1290,37 @@
               "received_at": "2026-02-23T16:38:50Z",
               "subject": "Fathom Call: One-time BTV::Wava",
               "detail_path": "startups/btv-wava/fathom-124503080-report.html",
+              "source_type": "fathom"
+            }
+          ]
+        },
+        {
+          "slug": "fathom",
+          "canonical_name": "Fathom",
+          "investment_vehicles": [],
+          "latest_report": {
+            "report_id": "fathom_133186355",
+            "period_label": null,
+            "received_at": "2026-03-26T17:55:20Z",
+            "subject": "Fathom Call: taxo Check-in",
+            "detail_path": "startups/fathom/fathom-133186355-report.html",
+            "source_type": "fathom"
+          },
+          "reports": [
+            {
+              "report_id": "fathom_133186355",
+              "period_label": null,
+              "received_at": "2026-03-26T17:55:20Z",
+              "subject": "Fathom Call: taxo Check-in",
+              "detail_path": "startups/fathom/fathom-133186355-report.html",
+              "source_type": "fathom"
+            },
+            {
+              "report_id": "fathom_125686026",
+              "period_label": null,
+              "received_at": "2026-02-26T17:44:34Z",
+              "subject": "Fathom Call: taxo Check-in",
+              "detail_path": "startups/fathom/fathom-125686026-report.html",
               "source_type": "fathom"
             }
           ]

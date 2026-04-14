@@ -7,10 +7,10 @@
     ],
     "latest_report": {
       "report_id": "fathom_116476701",
-      "period_label": "January 2026",
+      "period_label": null,
       "received_at": "2026-01-22T20:07:38Z",
       "subject": "Fathom Call: Pronto::BTV",
-      "detail_path": "startups/pronto/fathom-116476701-january-2026.html",
+      "detail_path": "startups/pronto/fathom-116476701-report.html",
       "source_type": "fathom"
     },
     "report_count": 1
@@ -18,10 +18,10 @@
   "reports": [
     {
       "report_id": "fathom_116476701",
-      "period_label": "January 2026",
+      "period_label": null,
       "received_at": "2026-01-22T20:07:38Z",
       "subject": "Fathom Call: Pronto::BTV",
-      "detail_path": "startups/pronto/fathom-116476701-january-2026.html",
+      "detail_path": "startups/pronto/fathom-116476701-report.html",
       "source_type": "fathom"
     }
   ]

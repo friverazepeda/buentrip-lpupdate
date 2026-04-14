@@ -591,7 +591,7 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
         'gmail_thread_id': raw.get('gmail_thread_id'),
-        'company_name': canonicalize_company_name(infer_company(subject, body_text)),
+        'company_name': canonicalize_company_name(raw.get('company_name_hint') or infer_company(subject, body_text)),
         'subject': subject,
         'from_address': raw.get('from_address'),
         'to_addresses': raw.get('to_addresses', []),

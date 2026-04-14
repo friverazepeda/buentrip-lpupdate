@@ -13,7 +13,7 @@
       "detail_path": "startups/neta-ai/19ce3637a3f2236b-february-2026.html",
       "source_type": "gmail"
     },
-    "report_count": 3
+    "report_count": 4
   },
   "reports": [
     {
@@ -23,6 +23,14 @@
       "subject": "Fwd: NETA AI \u2013 Investor Update | February 2026",
       "detail_path": "startups/neta-ai/19ce3637a3f2236b-february-2026.html",
       "source_type": "gmail"
+    },
+    {
+      "report_id": "fathom_116711983",
+      "period_label": null,
+      "received_at": "2026-01-23T16:04:57Z",
+      "subject": "Fathom Call: BuenTrip <> Neta AI - engineer recruiting process ",
+      "detail_path": "startups/neta-ai/fathom-116711983-report.html",
+      "source_type": "fathom"
     },
     {
       "report_id": "fathom_113592209",

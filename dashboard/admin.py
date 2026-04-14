@@ -8,12 +8,31 @@ class StartupMetricInline(admin.TabularInline):
 class StartupUpdateInline(admin.TabularInline):
     model = StartupUpdate
     extra = 0
-    fields = ('vehicle', 'quarter', 'year', 'period_label')
+    fields = ('update_name', 'quarter', 'year', 'date_received', 'source')
+    readonly_fields = ('update_name', 'quarter', 'year', 'date_received', 'source')
     show_change_link = True
+    can_delete = True
+
+    def update_name(self, obj):
+        return obj.period_label
+    update_name.short_description = 'Update Name'
+
+    def date_received(self, obj):
+        if obj.received_at:
+            return obj.received_at.strftime('%b %d, %Y %H:%M')
+        return "-"
+    date_received.short_description = 'Date Received'
+
+    def source(self, obj):
+        if obj.period_label and 'Fathom' in str(obj.period_label):
+            return 'Fathom'
+        return 'Gmail'
+    source.short_description = 'Source'
 
 class StartupUpdateManagerAdmin(admin.ModelAdmin):
     list_display = ('name', 'sector', 'business_model', 'update_count')
     search_fields = ('name',)
+    ordering = ('name',)
     inlines = [StartupUpdateInline]
     
     # Hide the default Startup fields so they only focus on editing updates
@@ -24,10 +43,39 @@ class StartupUpdateManagerAdmin(admin.ModelAdmin):
         return obj.updates.count()
     update_count.short_description = 'Parsed Updates'
 
+import subprocess
+import os
+from django.urls import path
+from django.http import HttpResponseRedirect
+from django.contrib import messages
+
 class StartupUpdateAdmin(admin.ModelAdmin):
+    change_list_template = "admin/dashboard/startupupdate/change_list.html"
     list_display = ('startup', 'vehicle', 'quarter', 'year', 'period_label')
     list_filter = ('startup', 'vehicle', 'year', 'quarter')
+    ordering = ('startup__name', '-year', '-quarter')
     inlines = [StartupMetricInline]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('run-pipeline/', self.admin_site.admin_view(self.run_pipeline), name='run_pipeline'),
+        ]
+        return custom_urls + urls
+
+    def run_pipeline(self, request):
+        try:
+            workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+            cmd = "PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli run-pipeline --limit 50"
+            
+            # Run the command in the background
+            subprocess.Popen(cmd, shell=True, cwd=workspace_dir)
+            
+            self.message_user(request, "Pipeline started successfully in the background. It will fetch from Gmail/Fathom, parse updates, and sync to Postgres.", level=messages.SUCCESS)
+        except Exception as e:
+            self.message_user(request, f"Error starting pipeline: {str(e)}", level=messages.ERROR)
+        
+        return HttpResponseRedirect("../")
 
 class QuarterlyLPReportAdmin(admin.ModelAdmin):
     list_display = ('vehicle', 'quarter', 'year')
@@ -44,6 +92,7 @@ class VehicleAdmin(admin.ModelAdmin):
 class StartupAdmin(admin.ModelAdmin):
     list_display = ('name', 'sector', 'business_model', 'get_vehicles')
     search_fields = ('name',)
+    ordering = ('name',)
     
     def get_vehicles(self, obj):
         return ", ".join([v.vehicle.name for v in obj.vehiclestartup_set.all()])

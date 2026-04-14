@@ -1,0 +1,28 @@
+{
+  "startup": {
+    "slug": "picker",
+    "canonical_name": "Picker",
+    "investment_vehicles": [
+      "BuenTrip Ventures Fund I"
+    ],
+    "latest_report": {
+      "report_id": "fathom_104001295",
+      "period_label": null,
+      "received_at": "2025-11-24T21:02:37Z",
+      "subject": "Fathom Call: Carmen de la Cerda and Juan Daniel de Picker",
+      "detail_path": "startups/picker/fathom-104001295-report.html",
+      "source_type": "fathom"
+    },
+    "report_count": 1
+  },
+  "reports": [
+    {
+      "report_id": "fathom_104001295",
+      "period_label": null,
+      "received_at": "2025-11-24T21:02:37Z",
+      "subject": "Fathom Call: Carmen de la Cerda and Juan Daniel de Picker",
+      "detail_path": "startups/picker/fathom-104001295-report.html",
+      "source_type": "fathom"
+    }
+  ]
+}

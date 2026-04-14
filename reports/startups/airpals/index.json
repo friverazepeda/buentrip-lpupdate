@@ -6,6 +6,73 @@
       "BuenTrip Ventures Fund I"
     ],
     "latest_report": {
+      "report_id": "19d88b3e4505e2d9",
+      "period_label": "March 2026",
+      "received_at": "Mon, 13 Apr 2026 16:16:11 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: March 2026",
+      "detail_path": "startups/airpals/19d88b3e4505e2d9-march-2026.html",
+      "source_type": "gmail"
+    },
+    "report_count": 9
+  },
+  "reports": [
+    {
+      "report_id": "19d88b3e4505e2d9",
+      "period_label": "March 2026",
+      "received_at": "Mon, 13 Apr 2026 16:16:11 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: March 2026",
+      "detail_path": "startups/airpals/19d88b3e4505e2d9-march-2026.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "19d34f51aedc14e0",
+      "period_label": "October 2025",
+      "received_at": "Sat, 28 Mar 2026 09:59:19 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: October 2025",
+      "detail_path": "startups/airpals/19d34f51aedc14e0-october-2025.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "19d34f4d0901511b",
+      "period_label": "September 2025",
+      "received_at": "Sat, 28 Mar 2026 09:59:00 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: September 2025",
+      "detail_path": "startups/airpals/19d34f4d0901511b-september-2025.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "19d34f49c6ba3062",
+      "period_label": "November 2025",
+      "received_at": "Sat, 28 Mar 2026 09:58:47 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: November 2025",
+      "detail_path": "startups/airpals/19d34f49c6ba3062-november-2025.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "19d34f47bbd29a93",
+      "period_label": "December 2025",
+      "received_at": "Sat, 28 Mar 2026 09:58:39 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: December 2025",
+      "detail_path": "startups/airpals/19d34f47bbd29a93-december-2025.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "19d34f450fa081d1",
+      "period_label": null,
+      "received_at": "Sat, 28 Mar 2026 09:58:27 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: 2025 Wrapped!",
+      "detail_path": "startups/airpals/19d34f450fa081d1-report.html",
+      "source_type": "gmail"
+    },
+    {
+      "report_id": "19d34ef2a9b551d6",
+      "period_label": null,
+      "received_at": "Sat, 28 Mar 2026 09:52:49 -0500",
+      "subject": "Fwd: \ud83d\udce6\u00a0 Airpals Update: Jan + Feb 2026",
+      "detail_path": "startups/airpals/19d34ef2a9b551d6-report.html",
+      "source_type": "gmail"
+    },
+    {
       "report_id": "fathom_120459143",
       "period_label": null,
       "received_at": "2026-02-06T17:44:12Z",
@@ -13,15 +80,12 @@
       "detail_path": "startups/airpals/fathom-120459143-report.html",
       "source_type": "fathom"
     },
-    "report_count": 1
-  },
-  "reports": [
     {
-      "report_id": "fathom_120459143",
+      "report_id": "fathom_101803947",
       "period_label": null,
-      "received_at": "2026-02-06T17:44:12Z",
+      "received_at": "2025-11-14T17:45:53Z",
       "subject": "Fathom Call: Airpals<>BTV check-in",
-      "detail_path": "startups/airpals/fathom-120459143-report.html",
+      "detail_path": "startups/airpals/fathom-101803947-report.html",
       "source_type": "fathom"
     }
   ]

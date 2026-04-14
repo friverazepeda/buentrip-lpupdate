@@ -13,7 +13,7 @@
       "detail_path": "startups/conductor/fathom-114331159-report.html",
       "source_type": "fathom"
     },
-    "report_count": 1
+    "report_count": 2
   },
   "reports": [
     {
@@ -22,6 +22,14 @@
       "received_at": "2026-01-14T19:59:52Z",
       "subject": "Fathom Call: BTV Check-in :: Stride Conductor",
       "detail_path": "startups/conductor/fathom-114331159-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_102931045",
+      "period_label": null,
+      "received_at": "2025-11-19T20:01:36Z",
+      "subject": "Fathom Call: [One-time]BTV Check-in Conductor",
+      "detail_path": "startups/conductor/fathom-102931045-report.html",
       "source_type": "fathom"
     }
   ]

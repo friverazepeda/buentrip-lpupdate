@@ -13,7 +13,7 @@
       "detail_path": "startups/mercately/fathom-133484208-report.html",
       "source_type": "fathom"
     },
-    "report_count": 2
+    "report_count": 3
   },
   "reports": [
     {
@@ -30,6 +30,14 @@
       "received_at": "2026-01-23T16:34:26Z",
       "subject": "Fathom Call: Mercately Check in:: BTV",
       "detail_path": "startups/mercately/fathom-116713736-report.html",
+      "source_type": "fathom"
+    },
+    {
+      "report_id": "fathom_103506236",
+      "period_label": null,
+      "received_at": "2025-11-21T16:50:18Z",
+      "subject": "Fathom Call: Mercately Check in:: BTV",
+      "detail_path": "startups/mercately/fathom-103506236-report.html",
       "source_type": "fathom"
     }
   ]

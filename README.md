@@ -4,19 +4,21 @@ A development-stage pipeline for ingesting startup investor updates from Gmail, 
 
 ## What it does
 
-- connects to Gmail via OAuth
+- connects to Gmail via OAuth and pulls reports from Fathom using the canonical list of startups
 - fetches emails labeled `Investor/Quarterly`
-- saves raw email JSON locally
+- saves raw email and Fathom JSON locally
 - downloads attachments
 - extracts text from PDF attachments
-- parses investor updates into normalized JSON
-- syncs parsed records into Postgres
-- provides CLI commands to inspect companies, updates, and metrics
+- parses content with regex AND bem for best results
+- syncs parsed records into a Django-backed Postgres database
+- provides CLI commands to inspect companies, updates, and metrics, and a Django admin UI
 
 ## Current architecture
 
 ### Sources
 - Gmail label: `Investor/Quarterly`
+- Fathom AI meeting summaries
+- Uses the canonical list of startups to map and filter inputs
 - email body text / HTML
 - PDF attachments
 
@@ -30,15 +32,24 @@ A development-stage pipeline for ingesting startup investor updates from Gmail, 
 - attachments: `data/attachments/`
 - parsed updates: `data/parsed_updates/`
 
-### Database
+### Database & Back-end
+- Django (backend framework and ORM)
 - Postgres
-- flexible schema using relational tables plus JSONB fields
+- flexible schema using Django models plus JSONFields
 
-Main tables:
-- `companies`
-- `email_messages`
-- `quarterly_updates`
-- `attachments`
+Main models/tables:
+- `Startup` (canonical list)
+- `EmailMessage`
+- `StartupUpdate` (normalized from Quarterly/Fathom)
+- `Attachment`
+
+## Cursor / AI Tool Context
+If you are Cursor or another AI assistant, note:
+1. **Sources:** We pull reports from Gmail AND Fathom using the canonical list of startups.
+2. **Parsing:** We parse content with regex AND bem to achieve the best extraction results.
+3. **Backend:** We use Django for the back-end (ORM, models, admin interface, migrations).
+4. **Project Structure:** `src/lpupdate/` holds core Python logic (CLI, parsers, fetchers); `dashboard/` holds the Django app; `data/` holds raw fetched json.
+5. **Virtual Env:** The primary env is usually `/home/frivera/.venvs/gmail-fetch/bin/python` with `PYTHONPATH=src`.
 
 ## Why JSONB
 

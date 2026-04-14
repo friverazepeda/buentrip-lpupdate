@@ -2,10 +2,10 @@
 
 ## Project purpose
 Pipeline to:
-1. fetch startup investor updates from Gmail
-2. parse email bodies + attachments into normalized JSON
-3. sync into Postgres
-4. generate a static report site with an index + one page per startup
+1. fetch startup investor updates from Gmail AND Fathom using the canonical list of startups
+2. parse content with regex AND bem for best results
+3. sync into a Django-backed Postgres database
+4. generate a static report site with an index + one page per startup, managed via Django Admin
 
 Project path:
 `/home/frivera/.openclaw/workspace/projects/lpupdate`
@@ -15,9 +15,19 @@ From project root:
 
 ```bash
 cd /home/frivera/.openclaw/workspace/projects/lpupdate
+
+# 1. Fetching (Gmail & Fathom)
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli gmail-fetch --limit 50
+# Fathom fetching logic utilizes the canonical list of startups
+
+# 2. Parsing (Regex + BEM)
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli parse-raw --limit 50
+
+# 3. DB Sync (Django backend)
+PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python manage.py migrate
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli sync-postgres --limit 50
+
+# 4. Reports
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli generate-report
 ```
 

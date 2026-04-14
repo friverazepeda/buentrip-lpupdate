@@ -51,22 +51,22 @@ Django project URL config is in `web/urls.py` (project module). It mounts:
 
 ## 3) What `web/` currently contains
 
-`web/` currently mixes two different things:
+`web/` currently contains frontend leftovers/build artifacts. The active frontend app now lives in `frontend/`.
 
 1. **Django project module files** (Python):
-   - `web/settings.py`, `web/urls.py`, `web/asgi.py`, `web/wsgi.py`, `web/__init__.py`
+   - `config/settings.py`, `config/urls.py`, `config/asgi.py`, `config/wsgi.py`, `config/__init__.py`
 
 2. **Next.js frontend app files** (TypeScript/Node):
-   - `web/package.json` (scripts: `dev`, `build`, `start`, `lint`)
-   - `web/next.config.ts` (`output: "export"`, `trailingSlash: true`)
-   - `web/app/**` pages/layout
-   - `web/components/**`, `web/lib/**`
-   - `web/public/reports/**` sample JSON contracts for the static site
+   - `frontend/package.json` (scripts: `dev`, `build`, `start`, `lint`)
+   - `frontend/next.config.ts` (`output: "export"`, `trailingSlash: true`)
+   - `frontend/app/**` pages/layout
+   - `frontend/components/**`, `frontend/lib/**`
+   - `frontend/public/reports/**` sample JSON contracts for the static site
 
-So `web/` is currently both:
+Current split:
 
-- the Django project package name (used by `manage.py` as `DJANGO_SETTINGS_MODULE=web.settings`), and
-- the Next.js app root.
+- Django project package is `config` (used by `manage.py` as `DJANGO_SETTINGS_MODULE=config.settings`).
+- Next.js app root is `frontend/`.
 
 ## 4) Production vs experimental (current best read)
 
@@ -74,13 +74,13 @@ Based on `README.md`, `docs/status.md`, and code wiring:
 
 - **Production-like / actively used today**
   - `src/lpupdate` CLI pipeline (Gmail/Fathom fetch, parse, Postgres sync, report generation)
-  - Django app in `dashboard/` + Django project wiring in `web/*.py`
+  - Django app in `dashboard/` + Django project wiring in `config/*.py`
   - Generated static report output under `reports/` served by Django catch-all route
 
 - **Experimental / in-progress**
   - BEM and hybrid parsing provider workflows (`bem`, `hybrid`, `bem-sample-run`)
-  - New Next.js static frontend under `web/app` and related TS files
-  - Any manually staged sample data in `web/public/reports/`
+  - New Next.js static frontend under `frontend/app` and related TS files
+  - Any manually staged sample data in `frontend/public/reports/`
 
 This classification matches the docs language ("development-stage", "in progress") and the fact that Django routes are still wired to serve `reports/` directly.
 
@@ -108,7 +108,7 @@ Optional consolidated run:
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python -m lpupdate.cli run-pipeline --limit 50 --provider hybrid
 ```
 
-## Django dashboard (`dashboard/` + `web/*.py`)
+## Django dashboard (`dashboard/` + `config/*.py`)
 
 ```bash
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python manage.py migrate
@@ -121,9 +121,9 @@ Useful admin flow:
 PYTHONPATH=src /home/frivera/.venvs/gmail-fetch/bin/python manage.py createsuperuser
 ```
 
-## Next.js frontend (`web/` app files)
+## Next.js frontend (`frontend/` app files)
 
-Run inside `web/`:
+Run inside `frontend/`:
 
 ```bash
 npm install

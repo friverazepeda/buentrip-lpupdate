@@ -17,8 +17,8 @@ data/
 .idea/
 
 # Next.js frontend
-web/.next/
-web/out/
-web/node_modules/
+frontend/.next/
+frontend/out/
+frontend/node_modules/
 
 bem_config.json

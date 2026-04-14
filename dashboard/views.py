@@ -29,3 +29,16 @@ def api_startups(request):
         for row in startups
     ]
     return JsonResponse(payload, safe=False)
+
+
+def api_startup_by_slug(request, slug):
+    for row in Startup.objects.all().order_by('name').values('id', 'name'):
+        if slugify(row['name']) == slug:
+            return JsonResponse(
+                {
+                    'id': row['id'],
+                    'name': row['name'],
+                    'slug': slugify(row['name']),
+                }
+            )
+    return JsonResponse({'detail': 'Not found.'}, status=404)

@@ -1,70 +1,106 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import { VehiclePills } from "@/components/vehicle-pills";
-import { loadPortfolioIndex } from "@/lib/reports-data";
-
-export const metadata: Metadata = {
-  title: "Portfolio overview — LP reports",
+type ApiStartup = {
+  id: number;
+  name: string;
+  slug: string;
 };
 
 export default function PortfolioPage() {
-  const data = loadPortfolioIndex();
-  const title = data.title ?? "LP reports — portfolio overview";
+  const [startups, setStartups] = useState<ApiStartup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+    const controller = new AbortController();
+
+    async function loadStartups() {
+      setLoading(true);
+      setError(null);
+      try {
+        const requestUrl = `${apiBase}/api/startups/`;
+        console.log("Fetching startups from:", requestUrl);
+      
+        const response = await fetch(requestUrl, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+      
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+      
+        const payload = (await response.json()) as unknown;
+        console.log("API response payload:", payload);
+      
+        const list = Array.isArray(payload) ? payload : [];
+        setStartups(list as ApiStartup[]);
+      
+        
+      } catch (err) {
+        const aborted =
+          err instanceof DOMException
+            ? err.name === "AbortError"
+            : err instanceof Error && err.name === "AbortError";
+        if (aborted) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Failed to load startups");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadStartups();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   return (
     <main id="lp-report-export">
-      <h1>{title}</h1>
-      {data.intro ? <p className="page-muted">{data.intro}</p> : null}
-
+      <h1>LP reports — portfolio overview</h1>
+      <p className="page-muted">Startup list loaded from the Django API endpoint at <code>/api/startups/</code>.</p>
       <section className="summary-grid" aria-label="Summary statistics">
-        {data.summary_stats.map((s) => (
-          <div key={s.label} className="summary-card">
-            <div className="summary-card-label">{s.label}</div>
-            <div className="summary-card-value">{s.value}</div>
-          </div>
-        ))}
+        <div className="summary-card">
+          <div className="summary-card-label">Total startups</div>
+          <div className="summary-card-value">{loading ? "…" : startups.length}</div>
+        </div>
       </section>
 
-      {data.vehicle_groups.map((group) => (
-        <section key={group.vehicle_title} className="vehicle-section">
-          <h2>{group.vehicle_title}</h2>
-          {group.rows.length === 0 ? (
-            <p className="page-muted">No startups in this group.</p>
-          ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Startup</th>
-                  <th>Vehicles</th>
-                  <th>Latest period</th>
-                  <th>Received</th>
-                  <th>Subject</th>
-                  <th>Report</th>
+      <section className="vehicle-section">
+        <h2>Startups</h2>
+        {loading ? <p className="page-muted">Loading startups...</p> : null}
+        {!loading && error ? <p className="page-muted">Could not load startups: {error}</p> : null}
+        {!loading && !error && startups.length === 0 ? <p className="page-muted">No startups found.</p> : null}
+        {!loading && !error && startups.length > 0 ? (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Startup</th>
+                <th>Slug</th>
+                <th>Startup page</th>
+              </tr>
+            </thead>
+            <tbody>
+              {startups.map((startup) => (
+                <tr key={startup.id}>
+                  <td>{startup.name}</td>
+                  <td>{startup.slug}</td>
+                  <td>
+                    <Link href={`/startups/${startup.slug}/`}>Open</Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {group.rows.map((row) => (
-                  <tr key={`${group.vehicle_title}-${row.slug}`}>
-                    <td>
-                      <Link href={`/startups/${row.slug}/`}>{row.name}</Link>
-                    </td>
-                    <td>
-                      <VehiclePills vehicles={row.vehicles} />
-                    </td>
-                    <td>{row.latest_report.report_period_label ?? "—"}</td>
-                    <td>{row.latest_report.received_at ?? "—"}</td>
-                    <td>{row.latest_report.subject ?? "—"}</td>
-                    <td>
-                      <Link href={`/startups/${row.slug}/${row.latest_report.report_id}/`}>Open</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      ))}
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+      </section>
 
       <p className="copy-hint">Select content in this page and copy for email, Notion, or an LP portal.</p>
     </main>

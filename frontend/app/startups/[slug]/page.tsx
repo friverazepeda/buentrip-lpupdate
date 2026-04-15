@@ -131,7 +131,9 @@ export default async function StartupPage({ params }: PageProps) {
               <tr key={r.id}>
                 <td>{r.period_label ?? `${r.quarter ?? "—"} ${r.year ?? ""}`.trim()}</td>
                 <td>{r.received_at ?? "—"}</td>
-                <td>{r.id}</td>
+                <td>
+                  <Link href={`/startups/${startup.slug}/${r.id}/`}>{r.id}</Link>
+                </td>
               </tr>
             ))}
           </tbody>

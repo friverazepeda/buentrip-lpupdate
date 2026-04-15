@@ -72,3 +72,39 @@ def api_startup_reports_by_slug(request, slug):
         for report in reports
     ]
     return JsonResponse(payload, safe=False)
+
+
+def api_report_by_id(request, id):
+    try:
+        report = StartupUpdate.objects.select_related('startup', 'vehicle').get(pk=id)
+    except StartupUpdate.DoesNotExist:
+        return JsonResponse({'detail': 'Not found.'}, status=404)
+
+    metrics = [
+        {
+            'name': metric.name,
+            'value': metric.value,
+            'change': metric.change,
+        }
+        for metric in report.metrics.all()
+    ]
+
+    payload = {
+        'id': report.id,
+        'startup_id': report.startup_id,
+        'startup_name': report.startup.name if report.startup else None,
+        'vehicle_id': report.vehicle_id,
+        'vehicle_name': report.vehicle.name,
+        'period_label': report.period_label,
+        'quarter': report.quarter,
+        'year': report.year,
+        'received_at': report.received_at.isoformat() if report.received_at else None,
+        'opportunities_and_challenges': report.opportunities_and_challenges,
+        'fundraising_updates': report.fundraising_updates,
+        'highlights': report.highlights,
+        'risks': report.risks,
+        'asks': report.asks,
+        'people': report.people,
+        'metrics': metrics,
+    }
+    return JsonResponse(payload)

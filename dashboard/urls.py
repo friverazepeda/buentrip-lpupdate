@@ -15,6 +15,7 @@ urlpatterns = [
         views.api_startup_reports_by_slug,
         name='api_startup_reports_by_slug',
     ),
+    path('api/reports/<int:id>/', views.api_report_by_id, name='api_report_by_id'),
     path('startup/<int:pk>/', views.startup_detail, name='startup_detail'),
     path('report/<int:pk>/', views.report_detail, name='report_detail'),
 ]

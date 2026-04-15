@@ -18,12 +18,14 @@ type StartupPageModel = {
   slug: string;
   vehicles: string[];
   report_count?: number;
-  reports: Array<{
-    report_id: string;
-    report_period_label?: string | null;
-    received_at?: string | null;
-    subject?: string | null;
-  }>;
+};
+
+type ApiStartupReport = {
+  id: number;
+  period_label?: string | null;
+  quarter?: string | null;
+  year?: number | null;
+  received_at?: string | null;
 };
 
 async function loadStartupBySlug(slug: string): Promise<StartupPageModel | null> {
@@ -44,9 +46,19 @@ async function loadStartupBySlug(slug: string): Promise<StartupPageModel | null>
     slug: startup.slug,
     // Backend endpoint currently returns id/name/slug only.
     vehicles: [],
-    report_count: 0,
-    reports: [],
   };
+}
+
+async function loadStartupReportsBySlug(slug: string): Promise<ApiStartupReport[]> {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  const response = await fetch(`${apiBase}/api/startups/by-slug/${slug}/reports/`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+  const payload = (await response.json()) as unknown;
+  return Array.isArray(payload) ? (payload as ApiStartupReport[]) : [];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -74,7 +86,14 @@ export default async function StartupPage({ params }: PageProps) {
     notFound();
   }
 
-  const count = startup.report_count ?? startup.reports.length;
+  let reports: ApiStartupReport[] = [];
+  try {
+    reports = await loadStartupReportsBySlug(slug);
+  } catch {
+    reports = [];
+  }
+
+  const count = startup.report_count ?? reports.length;
 
   return (
     <main id="lp-report-export">
@@ -96,7 +115,7 @@ export default async function StartupPage({ params }: PageProps) {
       </div>
 
       <h2>Reports</h2>
-      {startup.reports.length === 0 ? (
+      {reports.length === 0 ? (
         <p className="page-muted">No reports yet.</p>
       ) : (
         <table className="data-table">
@@ -104,19 +123,15 @@ export default async function StartupPage({ params }: PageProps) {
             <tr>
               <th>Period</th>
               <th>Received</th>
-              <th>Subject</th>
-              <th />
+              <th>Report ID</th>
             </tr>
           </thead>
           <tbody>
-            {startup.reports.map((r) => (
-              <tr key={r.report_id}>
-                <td>{r.report_period_label ?? "—"}</td>
+            {reports.map((r) => (
+              <tr key={r.id}>
+                <td>{r.period_label ?? `${r.quarter ?? "—"} ${r.year ?? ""}`.trim()}</td>
                 <td>{r.received_at ?? "—"}</td>
-                <td>{r.subject ?? "—"}</td>
-                <td>
-                  <Link href={`/startups/${startup.slug}/${r.report_id}/`}>Open</Link>
-                </td>
+                <td>{r.id}</td>
               </tr>
             ))}
           </tbody>

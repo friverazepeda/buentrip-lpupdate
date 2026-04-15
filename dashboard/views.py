@@ -42,3 +42,33 @@ def api_startup_by_slug(request, slug):
                 }
             )
     return JsonResponse({'detail': 'Not found.'}, status=404)
+
+
+def api_startup_reports_by_slug(request, slug):
+    startup_row = None
+    for row in Startup.objects.all().order_by('name').values('id', 'name'):
+        if slugify(row['name']) == slug:
+            startup_row = row
+            break
+
+    if startup_row is None:
+        return JsonResponse({'detail': 'Not found.'}, status=404)
+
+    reports = StartupUpdate.objects.filter(startup_id=startup_row['id']).order_by('-year', '-quarter').values(
+        'id',
+        'period_label',
+        'quarter',
+        'year',
+        'received_at',
+    )
+    payload = [
+        {
+            'id': report['id'],
+            'period_label': report['period_label'],
+            'quarter': report['quarter'],
+            'year': report['year'],
+            'received_at': report['received_at'].isoformat() if report['received_at'] else None,
+        }
+        for report in reports
+    ]
+    return JsonResponse(payload, safe=False)

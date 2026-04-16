@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ReportSections } from "@/components/report-body";
 import { VehiclePills } from "@/components/vehicle-pills";
-import type { ReportMeta } from "@/lib/types";
 
 type PageProps = { params: Promise<{ slug: string; reportId: string }> };
-
-const META_FIRST = ["report_period_label", "received_at", "subject", "gmail_message_id"] as const;
 
 type ApiReportMetric = {
   name: string;
@@ -22,6 +18,7 @@ type ApiReport = {
   startup_name?: string | null;
   vehicle_id?: number | null;
   vehicle_name?: string | null;
+  subject?: string | null;
   period_label?: string | null;
   quarter?: string | null;
   year?: number | null;
@@ -35,37 +32,67 @@ type ApiReport = {
   
 };
 
-type PageReport = {
-  startup: { slug: string; name: string };
-  vehicles: string[];
-  meta: ReportMeta;
-  summary?: string | null;
-  metrics?: Record<string, unknown> | null;
-  highlights?: string[] | null;
-  asks?: string[] | null;
-  risks?: string[] | null;
+type NormalizedMetric = {
+  label: string;
+  value: string;
+  unit?: string;
+  note?: string;
 };
 
-function toLines(value?: string | null): string[] | null {
-  if (!value) return null;
-  const lines = value
+type NormalizedReportDetail = {
+  startupName: string;
+  reportPeriod: string;
+  receivedAt: string;
+  subject: string;
+  investmentVehicles: string[];
+  summary: string;
+  metrics: NormalizedMetric[];
+  highlights: string[];
+  asks: string[];
+  risks: string[];
+};
+
+function toLines(value?: string | null): string[] {
+  if (!value) return [];
+  return value
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  return lines.length > 0 ? lines : null;
 }
 
-function toMetricsMap(metrics?: ApiReportMetric[] | null): Record<string, unknown> | null {
-  if (!metrics || metrics.length === 0) return null;
-  const mapped: Record<string, unknown> = {};
-  for (const metric of metrics) {
-    const key = metric.name?.trim() || `Metric ${Object.keys(mapped).length + 1}`;
-    mapped[key] = metric.change ? `${metric.value} (${metric.change})` : metric.value;
-  }
-  return Object.keys(mapped).length > 0 ? mapped : null;
+function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
+  const startupName = rawReport.startup_name?.trim() || "Startup";
+  const reportPeriod = rawReport.period_label?.trim() || `${rawReport.quarter ?? ""} ${rawReport.year ?? ""}`.trim() || "";
+  const receivedAt = rawReport.received_at?.trim() || "";
+  const subject = rawReport.subject?.trim() || "";
+  const investmentVehicles = rawReport.vehicle_name?.trim() ? [rawReport.vehicle_name.trim()] : [];
+
+  const summary = [rawReport.opportunities_and_challenges, rawReport.fundraising_updates]
+    .map((part) => (part ?? "").trim())
+    .filter(Boolean)
+    .join("\n\n");
+
+  const metrics: NormalizedMetric[] = (rawReport.metrics ?? []).map((metric, index) => ({
+    label: metric.name?.trim() || `Metric ${index + 1}`,
+    value: metric.value?.trim() || "",
+    note: metric.change?.trim() || undefined,
+  }));
+
+  return {
+    startupName,
+    reportPeriod,
+    receivedAt,
+    subject,
+    investmentVehicles,
+    summary,
+    metrics,
+    highlights: toLines(rawReport.highlights),
+    asks: toLines(rawReport.asks),
+    risks: toLines(rawReport.risks),
+  };
 }
 
-async function loadReportById(slug: string, reportId: string): Promise<PageReport | null> {
+async function loadReportById(reportId: string): Promise<NormalizedReportDetail | null> {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
   const response = await fetch(`${apiBase}/api/reports/${reportId}/`, { cache: "no-store" });
   if (response.status === 404) {
@@ -76,86 +103,75 @@ async function loadReportById(slug: string, reportId: string): Promise<PageRepor
   }
 
   const raw = (await response.json()) as ApiReport;
-  const startupName = raw.startup_name || "Startup";
-  const vehicles = raw.vehicle_name ? [raw.vehicle_name] : [];
-
-  const summaryParts = [raw.opportunities_and_challenges, raw.fundraising_updates]
-    .filter((part): part is string => Boolean(part && part.trim()))
-    .join("\n\n");
-
-  const meta: ReportMeta = {
-    report_period_label: raw.period_label,
-    received_at: raw.received_at,
-    startup_id: raw.startup_id,
-    vehicle_id: raw.vehicle_id,
-    vehicle_name: raw.vehicle_name,
-    quarter: raw.quarter,
-    year: raw.year,
-  };
-
-  return {
-    startup: { slug, name: startupName },
-    vehicles,
-    meta,
-    summary: summaryParts || null,
-    metrics: toMetricsMap(raw.metrics),
-    highlights: toLines(raw.highlights),
-    asks: toLines(raw.asks),
-    risks: toLines(raw.risks),
-  };
+  return normalizeReportDetail(raw);
 }
 
-function MetaTable({ meta }: { meta: ReportMeta }) {
-  const rest = Object.keys(meta).filter((k) => !(META_FIRST as readonly string[]).includes(k));
-  const ordered = [...META_FIRST.filter((k) => k in meta && meta[k] != null && String(meta[k]).trim() !== "")];
-  const extra = rest
-    .filter((k) => meta[k] != null && String(meta[k]).trim() !== "")
-    .sort((a, b) => a.localeCompare(b));
-
-  const rows: { key: string; label: string; value: string }[] = [];
-
-  const push = (key: string) => {
-    const raw = meta[key];
-    if (raw === null || raw === undefined) return;
-    const value = typeof raw === "object" ? JSON.stringify(raw) : String(raw);
-    if (!value.trim()) return;
-    rows.push({
-      key,
-      label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-      value,
-    });
-  };
-
-  ordered.forEach(push);
-  extra.forEach(push);
-
-  if (rows.length === 0) {
-    return <p style={{ color: "#555" }}>None</p>;
-  }
-
+function BulletSection({ title, items }: { title: string; items?: string[] | null }) {
+  const cleaned = (items ?? []).filter((item) => item && item.trim());
   return (
-    <table className="data-table">
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.key}>
-            <th style={{ width: "28%" }}>{r.label}</th>
-            <td style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{r.value}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "18px 0" }}>
+      <h2 style={{ color: "#16324f", marginBottom: 12 }}>{title}</h2>
+      {cleaned.length === 0 ? (
+        <p style={{ color: "#555" }}>None</p>
+      ) : (
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {cleaned.map((item) => (
+            <li key={item} style={{ marginBottom: 8 }}>
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function MetricsSection({ metrics }: { metrics: NormalizedMetric[] }) {
+  const visibleMetrics = metrics.filter(
+    (metric) =>
+      Boolean(metric.label?.trim()) || Boolean(metric.value?.trim()) || Boolean(metric.unit?.trim()) || Boolean(metric.note?.trim()),
+  );
+  return (
+    <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "18px 0" }}>
+      <h2 style={{ color: "#16324f", marginBottom: 12 }}>Key Metrics</h2>
+      {visibleMetrics.length === 0 ? (
+        <p style={{ color: "#555", margin: 0 }}>No key metrics parsed.</p>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {visibleMetrics.map((metric) => (
+            <article
+              key={`${metric.label}-${metric.value}-${metric.note ?? ""}`}
+              style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, background: "#f9fafb" }}
+            >
+              <div style={{ fontSize: 13, color: "#526172", marginBottom: 6 }}>{metric.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 600, color: "#16324f", lineHeight: 1.3 }}>
+                {metric.value}
+                {metric.unit ? ` ${metric.unit}` : ""}
+              </div>
+              {metric.note ? <div style={{ marginTop: 6, color: "#374151", fontSize: 13 }}>{metric.note}</div> : null}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug, reportId } = await params;
+  const { reportId } = await params;
   try {
-    const r = await loadReportById(slug, reportId);
+    const r = await loadReportById(reportId);
     if (!r) {
       return { title: "Report" };
     }
-    const period = r.meta.report_period_label ?? reportId;
-    return { title: `${r.startup.name} — ${period}` };
+    const period = r.reportPeriod || reportId;
+    return { title: `${r.startupName} — ${period}` };
   } catch {
     return { title: "Report" };
   }
@@ -163,9 +179,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ReportPage({ params }: PageProps) {
   const { slug, reportId } = await params;
-  let report: PageReport | null;
+  let report: NormalizedReportDetail | null;
   try {
-    report = await loadReportById(slug, reportId);
+    report = await loadReportById(reportId);
   } catch {
     notFound();
   }
@@ -178,37 +194,40 @@ export default async function ReportPage({ params }: PageProps) {
       <p>
         <Link href="/">← Portfolio</Link>
         {" · "}
-        <Link href={`/startups/${report.startup.slug}/`}>← {report.startup.name}</Link>
+        <Link href={`/startups/${slug}/`}>← {report.startupName}</Link>
       </p>
 
-      <h1>
-        {report.startup.name}
-        {report.meta.report_period_label ? ` — ${report.meta.report_period_label}` : ""}
-      </h1>
+      <h1>{report.startupName}</h1>
 
       <div style={{ color: "#555", marginBottom: 16 }}>
-        <strong>Vehicles:</strong> <VehiclePills vehicles={report.vehicles} />
+        <div style={{ marginBottom: 8 }}>
+          <strong>Report period:</strong> {report.reportPeriod || "—"}
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <strong>Received at:</strong> {report.receivedAt || "—"}
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <strong>Subject:</strong> {report.subject || "—"}
+        </div>
+        <div>
+          <strong>Investment vehicles:</strong> <VehiclePills vehicles={report.investmentVehicles} />
+        </div>
       </div>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 16,
-          margin: "18px 0",
-        }}
-      >
-        <h2 style={{ color: "#16324f", marginBottom: 12 }}>Metadata</h2>
-        <MetaTable meta={report.meta} />
+      <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "18px 0" }}>
+        <h2 style={{ color: "#16324f", marginBottom: 12 }}>Summary</h2>
+        {report.summary.trim() ? (
+          <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{report.summary}</p>
+        ) : (
+          <p style={{ color: "#555", margin: 0 }}>None</p>
+        )}
       </section>
 
-      <ReportSections
-        summary={report.summary}
-        metrics={report.metrics ?? undefined}
-        highlights={report.highlights ?? undefined}
-        asks={report.asks ?? undefined}
-        risks={report.risks ?? undefined}
-      />
+      <MetricsSection metrics={report.metrics} />
+
+      <BulletSection title="Highlights" items={report.highlights} />
+      <BulletSection title="Asks" items={report.asks} />
+      <BulletSection title="Risks" items={report.risks} />
 
       <p className="copy-hint">Select content in this page and copy for email, Notion, or an LP portal.</p>
     </main>

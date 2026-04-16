@@ -5,6 +5,7 @@ import json
 import time
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 from .config import Settings, load_dotenv
 from .gmail import (
@@ -21,6 +22,33 @@ from .parsers import build_source_bundle, get_parse_provider
 from .reporting import generate_report_site
 from .schema import SCHEMA_SQL
 from .store import ensure_data_dir, write_json
+
+
+def _new_stage_summary(stage: str) -> dict[str, Any]:
+    return {
+        "stage": stage,
+        "fetched": 0,
+        "parsed": 0,
+        "skipped": 0,
+        "failed": 0,
+        "skip_reasons": {},
+        "failed_reasons": {},
+    }
+
+
+def _increment_reason(summary: dict[str, Any], bucket: str, reason: str) -> None:
+    counts = summary[bucket]
+    counts[reason] = counts.get(reason, 0) + 1
+
+
+def _write_stage_summary(stage_dir: Path, summary: dict[str, Any], extra: dict[str, Any] | None = None) -> str:
+    payload = dict(summary)
+    payload["generated_at_epoch_ms"] = int(time.time() * 1000)
+    if extra:
+        payload.update(extra)
+    path = stage_dir / "run_summary.json"
+    write_json(path, payload)
+    return str(path)
 
 
 def cmd_doctor(_: argparse.Namespace) -> int:
@@ -111,6 +139,7 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
     from .store import ensure_data_dir, write_json
     import json
     client = FathomClient(settings.fathom_api_key)
+    summary = _new_stage_summary("fathom_fetch")
     meetings = client.list_meetings(limit=args.limit, include_transcript=True, include_summary=True, created_after=args.created_after)
     if args.title_match:
         meetings = [m for m in meetings if args.title_match.lower() in (m.get('title') or '').lower()]
@@ -136,6 +165,7 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
     
     from .vehicles import canonicalize_company_name
     
+    summary_path = ""
     for item in meetings:
         normalized = normalize_fathom_meeting(item)
         
@@ -152,6 +182,7 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
         mid = normalized['gmail_message_id']
         path = data_dir / f"{mid}.json"
         write_json(path, normalized)
+        summary["fetched"] += 1
         fetched.append({
             'fathom_id': mid,
             'title': item.get('title'),
@@ -160,7 +191,13 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
             'date': normalized['received_at'],
             'path': str(path)
         })
+    summary_path = _write_stage_summary(
+        data_dir,
+        summary,
+        extra={"source": "fathom", "output_dir": str(data_dir)},
+    )
     print(json.dumps({"count": len(fetched), "meetings": fetched}, indent=2))
+    print(json.dumps({"event": "stage_summary", "path": summary_path, "stage": "fathom_fetch"}))
     return 0
 
 def cmd_gmail_fetch(args: argparse.Namespace) -> int:
@@ -182,6 +219,8 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
     data_dir = ensure_data_dir("data/raw_gmail")
     attachment_dir = ensure_data_dir("data/attachments")
     fetched: list[dict] = []
+    summary = _new_stage_summary("gmail_fetch")
+    summary_path = ""
     for item in messages:
         full = service.users().messages().get(
             userId="me",
@@ -196,6 +235,7 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
             saved_attachments.append(saved)
         normalized['attachments'] = saved_attachments
         write_json(data_dir / f"{item['id']}.json", normalized)
+        summary["fetched"] += 1
         fetched.append({
             "gmail_message_id": normalized["gmail_message_id"],
             "subject": normalized["subject"],
@@ -205,11 +245,17 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
             "path": str(data_dir / f"{item['id']}.json"),
         })
 
+    summary_path = _write_stage_summary(
+        data_dir,
+        summary,
+        extra={"query": settings.gmail_query, "output_dir": str(data_dir)},
+    )
     print(json.dumps({
         "query": settings.gmail_query,
         "count": len(fetched),
         "messages": fetched,
     }, indent=2))
+    print(json.dumps({"event": "stage_summary", "path": summary_path, "stage": "gmail_fetch"}))
     return 0
 
 
@@ -227,29 +273,47 @@ def cmd_parse_raw(args: argparse.Namespace) -> int:
         sources.extend(sorted(fathom_dir.glob("*.json")))
     raw_files = sorted(sources, key=lambda f: f.name)[: args.limit]
     parsed: list[dict] = []
+    summary = _new_stage_summary("parse_raw")
+    summary_path = ""
+    parse_error: Exception | None = None
     for path in raw_files:
-        raw = load_raw_message(path)
-        raw['source_path'] = str(path)
-        bundle = build_source_bundle(raw)
-        raw['attachment_text'] = bundle.attachment_text
-        result = provider.parse(raw)
-        update = result.update
-        update['attachment_count'] = bundle.attachment_count
-        update['attachment_text_present'] = bundle.attachment_text_present
-        update['parse_provider'] = provider.name
-        write_json(out_dir / path.name, update)
-        if result.provider_output is not None:
-            write_json(provider_out_dir / path.name, result.provider_output)
-        parsed.append({
-            'gmail_message_id': update['gmail_message_id'],
-            'company_name': update['company_name'],
-            'report_period_label': update['report_period_label'],
-            'parser_provider': update.get('parser_provider', provider.name),
-            'path': str(out_dir / path.name),
-        })
-        if args.throttle_seconds > 0:
-            time.sleep(args.throttle_seconds)
+        try:
+            raw = load_raw_message(path)
+            raw['source_path'] = str(path)
+            bundle = build_source_bundle(raw)
+            raw['attachment_text'] = bundle.attachment_text
+            result = provider.parse(raw)
+            update = result.update
+            update['attachment_count'] = bundle.attachment_count
+            update['attachment_text_present'] = bundle.attachment_text_present
+            update['parse_provider'] = provider.name
+            write_json(out_dir / path.name, update)
+            if result.provider_output is not None:
+                write_json(provider_out_dir / path.name, result.provider_output)
+            parsed.append({
+                'gmail_message_id': update['gmail_message_id'],
+                'company_name': update['company_name'],
+                'report_period_label': update['report_period_label'],
+                'parser_provider': update.get('parser_provider', provider.name),
+                'path': str(out_dir / path.name),
+            })
+            summary["parsed"] += 1
+            if args.throttle_seconds > 0:
+                time.sleep(args.throttle_seconds)
+        except Exception as exc:
+            summary["failed"] += 1
+            _increment_reason(summary, "failed_reasons", "parse_failure")
+            parse_error = exc
+            break
+    summary_path = _write_stage_summary(
+        out_dir,
+        summary,
+        extra={"provider": provider.name, "source": args.source, "output_dir": str(out_dir)},
+    )
     print(json.dumps({'count': len(parsed), 'provider': provider.name, 'updates': parsed}, indent=2))
+    print(json.dumps({"event": "stage_summary", "path": summary_path, "stage": "parse_raw"}))
+    if parse_error is not None:
+        raise parse_error
     return 0
 
 
@@ -345,11 +409,14 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
         parsed_files = [p for p in parsed_files if p.name.startswith('fathom_')]
     parsed_files = parsed_files[: args.limit]
     synced: list[dict] = []
+    summary = _new_stage_summary("sync_postgres")
+    summary_path = ""
 
     with connect(settings.database_url) as conn:
         with conn.cursor() as cur:
             cur.execute(SCHEMA_SQL)
             for parsed_path in parsed_files:
+                summary["parsed"] += 1
                 parsed = load_raw_message(parsed_path)
                 raw_path = raw_dir / parsed_path.name
                 if not raw_path.exists():
@@ -357,6 +424,8 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
                     if alt_path.exists():
                         raw_path = alt_path
                     else:
+                        summary["skipped"] += 1
+                        _increment_reason(summary, "skip_reasons", "raw_source_missing")
                         continue
                 raw = load_raw_message(raw_path)
                 company_id = None
@@ -371,9 +440,28 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
                         'email_message_id': email_message_id,
                         'quarterly_update_id': update_id,
                     })
+                else:
+                    summary["skipped"] += 1
+                    if not parsed.get('company_name'):
+                        _increment_reason(summary, "skip_reasons", "no_company_match")
+                    else:
+                        has_content = any(
+                            bool(parsed.get(field))
+                            for field in ("summary", "highlights_json", "asks_json", "risks_json", "metrics_json")
+                        )
+                        if not has_content:
+                            _increment_reason(summary, "skip_reasons", "empty_content")
+                        else:
+                            _increment_reason(summary, "skip_reasons", "not_persisted")
         conn.commit()
 
+    summary_path = _write_stage_summary(
+        parsed_dir,
+        summary,
+        extra={"source": args.source, "input_dir": str(parsed_dir)},
+    )
     print(json.dumps({'count': len(synced), 'synced': synced}, indent=2))
+    print(json.dumps({"event": "stage_summary", "path": summary_path, "stage": "sync_postgres"}))
     return 0
 
 

@@ -7,6 +7,34 @@ from typing import Any
 
 from .vehicles import canonicalize_company_name
 
+# Default period dict when inference fails (keeps downstream shape stable).
+_EMPTY_PERIOD: dict[str, Any] = {
+    'report_period_label': None,
+    'report_quarter': None,
+    'report_year': None,
+    'report_month': None,
+}
+
+
+def _as_text(value: Any) -> str:
+    """Coerce optional raw input to a string for safe regex/slicing."""
+    if value is None:
+        return ''
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
+def _safe_re_search(pattern: str, text: str, flags: int = 0):
+    """re.search that never raises on bad patterns or inputs."""
+    try:
+        return re.search(pattern, text, flags)
+    except re.error:
+        return None
+    except (TypeError, ValueError):
+        return None
+
+
 MONTH_PATTERN = r'(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
 
 MONTHS = {
@@ -49,19 +77,23 @@ def load_raw_message(path: str | Path) -> dict[str, Any]:
 def _clean_company_name(value: str | None) -> str | None:
     if not value:
         return None
-    name = value.strip(' –-|:')
-    name = re.sub(r'\bQ[1-4][-\s]?20?\d{2,4}\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
-    name = re.sub(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d{2}\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
-    name = re.sub(r'\bInvestor/Internal Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
-    name = re.sub(r'\bInvestor Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
-    name = re.sub(r'\bMonthly Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
-    name = re.sub(r'\bBOD Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
-    name = re.sub(r'\[[^\]]+\]', '', name).strip(' –-|:')
-    return name or None
+    try:
+        name = value.strip(' –-|:')
+        name = re.sub(r'\bQ[1-4][-\s]?20?\d{2,4}\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+        name = re.sub(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d{2}\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+        name = re.sub(r'\bInvestor/Internal Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+        name = re.sub(r'\bInvestor Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+        name = re.sub(r'\bMonthly Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+        name = re.sub(r'\bBOD Update\b', '', name, flags=re.IGNORECASE).strip(' –-|:')
+        name = re.sub(r'\[[^\]]+\]', '', name).strip(' –-|:')
+        return name or None
+    except (re.error, TypeError, ValueError):
+        return value.strip() or None
 
 
 def infer_company(subject: str | None, body_text: str | None) -> str | None:
-    text = subject or ''
+    text = _as_text(subject)
+    body_safe = _as_text(body_text)
     patterns = [
         r'Fwd:\s*([^:]+):\s*Q\d',
         r'Fwd:\s*([^|\-]+?)\s*[–\-:]\s*Investor/Internal Update',
@@ -77,79 +109,121 @@ def infer_company(subject: str | None, body_text: str | None) -> str | None:
         r'Fwd:\s*([^x]+?)\s+x\s+BTV\s+review',
     ]
     for pattern in patterns:
-        m = re.search(pattern, text, re.IGNORECASE)
+        m = _safe_re_search(pattern, text, re.IGNORECASE)
         if m:
-            return _clean_company_name(m.group(1))
-    if body_text:
-        m = re.search(r'Subject:\s*([^:]+):\s*Q\d', body_text, re.IGNORECASE)
+            try:
+                return _clean_company_name(m.group(1))
+            except (IndexError, AttributeError):
+                continue
+    if body_safe:
+        m = _safe_re_search(r'Subject:\s*([^:]+):\s*Q\d', body_safe, re.IGNORECASE)
         if m:
-            return _clean_company_name(m.group(1))
-        m = re.search(r'From:\s+[^<]+<[^>]+@([a-z0-9-]+)\.', body_text, re.IGNORECASE)
+            try:
+                return _clean_company_name(m.group(1))
+            except (IndexError, AttributeError):
+                pass
+        m = _safe_re_search(r'From:\s+[^<]+<[^>]+@([a-z0-9-]+)\.', body_safe, re.IGNORECASE)
         if m:
-            return _clean_company_name(m.group(1).replace('-', ' ').title().replace(' ', ''))
+            try:
+                return _clean_company_name(m.group(1).replace('-', ' ').title().replace(' ', ''))
+            except (IndexError, AttributeError):
+                pass
     return None
 
 
 def infer_period(subject: str | None, body_text: str | None) -> dict[str, Any]:
-    text = ' '.join(filter(None, [subject, body_text[:4000] if body_text else None]))
-    quarter_match = re.search(r'\bQ([1-4])(?:[-\s]?(20\d{2}|\d{2}))\b', text, re.IGNORECASE)
+    subj_s = _as_text(subject)
+    body_s = _as_text(body_text)
+    body_clip = body_s[:4000] if body_s else ''
+    text = ' '.join(part for part in (subj_s, body_clip) if part)
+    quarter_match = _safe_re_search(r'\bQ([1-4])(?:[-\s]?(20\d{2}|\d{2}))\b', text, re.IGNORECASE)
     if quarter_match:
-        q = int(quarter_match.group(1))
-        y = quarter_match.group(2)
-        year = int(y) if len(y) == 4 else 2000 + int(y)
-        return {
-            'report_period_label': f'Q{q} {year}',
-            'report_quarter': q,
-            'report_year': year,
-            'report_month': None,
-        }
-    quarter_subject_match = re.search(r'\bQ([1-4])\b', subject or '', re.IGNORECASE)
-    forward_date_match = re.search(r'Date:\s+\w+,\s+(' 
-        r'January|February|March|April|May|June|July|August|September|October|November|December' 
-        r'|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+\d{1,2},\s+(20\d{2})', body_text or '', re.IGNORECASE)
+        try:
+            q = int(quarter_match.group(1))
+            y = quarter_match.group(2)
+            if not y:
+                raise ValueError('missing year')
+            year = int(y) if len(y) == 4 else 2000 + int(y)
+            return {
+                'report_period_label': f'Q{q} {year}',
+                'report_quarter': q,
+                'report_year': year,
+                'report_month': None,
+            }
+        except (ValueError, TypeError, IndexError, AttributeError):
+            pass
+    quarter_subject_match = _safe_re_search(r'\bQ([1-4])\b', subj_s, re.IGNORECASE)
+    forward_date_match = _safe_re_search(
+        r'Date:\s+\w+,\s+('
+        r'January|February|March|April|May|June|July|August|September|October|November|December'
+        r'|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+\d{1,2},\s+(20\d{2})',
+        body_s,
+        re.IGNORECASE,
+    )
     if quarter_subject_match and forward_date_match:
-        q = int(quarter_subject_match.group(1))
-        month_token = forward_date_match.group(1).lower()[:3]
-        month_map = {'jan':1,'feb':2,'mar':3,'apr':4,'may':5,'jun':6,'jul':7,'aug':8,'sep':9,'oct':10,'nov':11,'dec':12}
-        year = int(forward_date_match.group(2))
-        month_num = month_map[month_token]
-        if month_num <= 3:
-            year -= 1
-        return {
-            'report_period_label': f'Q{q} {year}',
-            'report_quarter': q,
-            'report_year': year,
-            'report_month': None,
-        }
-    range_match = re.search(rf'{MONTH_PATTERN}\s+\d{{1,2}}\s*[-–]\s+{MONTH_PATTERN}\s+\d{{1,2}}\s*(20\d{{2}})', text, re.IGNORECASE)
+        try:
+            q = int(quarter_subject_match.group(1))
+            month_token = forward_date_match.group(1).lower()[:3]
+            month_map = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
+            year = int(forward_date_match.group(2))
+            month_num = month_map.get(month_token)
+            if month_num is None:
+                pass
+            else:
+                if month_num <= 3:
+                    year -= 1
+                return {
+                    'report_period_label': f'Q{q} {year}',
+                    'report_quarter': q,
+                    'report_year': year,
+                    'report_month': None,
+                }
+        except (ValueError, TypeError, IndexError, AttributeError):
+            pass
+    try:
+        range_match = re.search(rf'{MONTH_PATTERN}\s+\d{{1,2}}\s*[-–]\s+{MONTH_PATTERN}\s+\d{{1,2}}\s*(20\d{{2}})', text, re.IGNORECASE)
+    except re.error:
+        range_match = None
     if range_match:
-        start_month = MONTHS[range_match.group(1).lower()]
-        end_month_name = range_match.group(2).lower()
-        year = int(range_match.group(3))
-        end_month = MONTHS[end_month_name]
-        quarter = (end_month - 1) // 3 + 1
-        return {
-            'report_period_label': f'Q{quarter} {year}',
-            'report_quarter': quarter,
-            'report_year': year,
-            'report_month': None,
-        }
-    month_match = re.search(r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+(20\d{2})', text, re.IGNORECASE)
+        try:
+            start_month = MONTHS.get(range_match.group(1).lower())
+            end_month_name = range_match.group(2).lower()
+            year = int(range_match.group(3))
+            end_month = MONTHS.get(end_month_name)
+            if start_month is None or end_month is None:
+                pass
+            else:
+                quarter = (end_month - 1) // 3 + 1
+                return {
+                    'report_period_label': f'Q{quarter} {year}',
+                    'report_quarter': quarter,
+                    'report_year': year,
+                    'report_month': None,
+                }
+        except (ValueError, TypeError, IndexError, AttributeError, KeyError):
+            pass
+    month_match = _safe_re_search(
+        r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+(20\d{2})',
+        text,
+        re.IGNORECASE,
+    )
     if month_match:
-        month_name = month_match.group(1).lower()
-        year = int(month_match.group(2))
-        return {
-            'report_period_label': f'{month_match.group(1)} {year}',
-            'report_quarter': None,
-            'report_year': year,
-            'report_month': MONTHS[month_name],
-        }
-    return {
-        'report_period_label': None,
-        'report_quarter': None,
-        'report_year': None,
-        'report_month': None,
-    }
+        try:
+            month_name = month_match.group(1).lower()
+            month_num = MONTHS.get(month_name)
+            year = int(month_match.group(2))
+            if month_num is None:
+                pass
+            else:
+                return {
+                    'report_period_label': f'{month_match.group(1)} {year}',
+                    'report_quarter': None,
+                    'report_year': year,
+                    'report_month': month_num,
+                }
+        except (ValueError, TypeError, IndexError, AttributeError):
+            pass
+    return dict(_EMPTY_PERIOD)
 
 
 def _money_number(value: str) -> float:
@@ -168,61 +242,73 @@ def _money_number(value: str) -> float:
 
 
 def _normalize_text(text: str | None) -> str:
-    value = text or ''
-    value = value.replace('\r\n', '\n').replace('\r', '\n')
-    value = value.replace('\u202f', ' ').replace('\xa0', ' ')
-    value = value.replace('–', '-').replace('—', '-')
-    value = value.replace('“', '"').replace('”', '"').replace('’', "'")
-    value = re.sub(r'\*+', '', value)
-    value = re.sub(r'[ \t]+', ' ', value)
-    value = re.sub(r'\n{3,}', '\n\n', value)
-    return value.strip()
+    try:
+        value = _as_text(text)
+        value = value.replace('\r\n', '\n').replace('\r', '\n')
+        value = value.replace('\u202f', ' ').replace('\xa0', ' ')
+        value = value.replace('–', '-').replace('—', '-')
+        value = value.replace('“', '"').replace('”', '"').replace('’', "'")
+        value = re.sub(r'\*+', '', value)
+        value = re.sub(r'[ \t]+', ' ', value)
+        value = re.sub(r'\n{3,}', '\n\n', value)
+        return value.strip()
+    except (re.error, TypeError, ValueError):
+        return _as_text(text).strip()
 
 
 def _cleanup_section_text(text: str) -> str:
-    value = _normalize_text(text)
-    value = re.sub(r'<https?://[^>]+>', '', value)
-    value = re.sub(r'https?://\S+', '', value)
-    value = re.sub(r'\[image:[^\]]+\]', '', value, flags=re.IGNORECASE)
-    value = re.sub(r'^>{2,}.*$', '', value, flags=re.MULTILINE)
-    value = re.sub(r'^\s*Demonstração\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\s*Sent via Paperstreet.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\s*Paperstreet ©.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\s*No longer wish to hear from us\?.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\s*Calendly link\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\s*Schedule time with me!?\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\s*SPA:\s*$', '', value, flags=re.MULTILINE)
-    value = re.sub(r'^\s*ENG:\s*$', '', value, flags=re.MULTILINE)
-    value = re.sub(r'^\*?Confidential\..*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?This update and its contents are confidential.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?Blurbs to facilitate connections you can help us with:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?Update on Fundraising / Lowlights and Focus Areas:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?🏋 Challenges\*?$', 'Risks', value, flags=re.MULTILINE)
-    value = re.sub(r'^\*?📈 Looking Ahead\*?$', 'Looking Ahead', value, flags=re.MULTILINE)
-    value = re.sub(r'^\*?Looking Ahead\*?$', 'Looking Ahead', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?📈 Traction\*?$', 'Highlights', value, flags=re.MULTILINE)
-    value = re.sub(r'^\*?🏆 Achievements\*?$', 'Highlights', value, flags=re.MULTILINE)
-    value = re.sub(r'^\*?Highlights:?\*?$', 'Highlights', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?Risks:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?How you can help:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^\*?Asks:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
-    value = re.sub(r'^[*_\-\s]{20,}$', '', value, flags=re.MULTILINE)
-    value = re.sub(r'\n{3,}', '\n\n', value)
-    return value.strip()
+    try:
+        value = _normalize_text(text)
+    except Exception:
+        return ''
+    try:
+        value = re.sub(r'<https?://[^>]+>', '', value)
+        value = re.sub(r'https?://\S+', '', value)
+        value = re.sub(r'\[image:[^\]]+\]', '', value, flags=re.IGNORECASE)
+        value = re.sub(r'^>{2,}.*$', '', value, flags=re.MULTILINE)
+        value = re.sub(r'^\s*Demonstração\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\s*Sent via Paperstreet.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\s*Paperstreet ©.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\s*No longer wish to hear from us\?.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\s*Calendly link\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\s*Schedule time with me!?\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\s*SPA:\s*$', '', value, flags=re.MULTILINE)
+        value = re.sub(r'^\s*ENG:\s*$', '', value, flags=re.MULTILINE)
+        value = re.sub(r'^\*?Confidential\..*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?This update and its contents are confidential.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?Blurbs to facilitate connections you can help us with:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?Update on Fundraising / Lowlights and Focus Areas:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?🏋 Challenges\*?$', 'Risks', value, flags=re.MULTILINE)
+        value = re.sub(r'^\*?📈 Looking Ahead\*?$', 'Looking Ahead', value, flags=re.MULTILINE)
+        value = re.sub(r'^\*?Looking Ahead\*?$', 'Looking Ahead', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?📈 Traction\*?$', 'Highlights', value, flags=re.MULTILINE)
+        value = re.sub(r'^\*?🏆 Achievements\*?$', 'Highlights', value, flags=re.MULTILINE)
+        value = re.sub(r'^\*?Highlights:?\*?$', 'Highlights', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?Risks:?\*?$', 'Risks', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?How you can help:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^\*?Asks:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
+        value = re.sub(r'^[*_\-\s]{20,}$', '', value, flags=re.MULTILINE)
+        value = re.sub(r'\n{3,}', '\n\n', value)
+        return value.strip()
+    except re.error:
+        return _normalize_text(text)
 
 
 def _strip_signature(text: str) -> str:
-    thread_match = re.search(r'\nOn [A-Za-z]{3,9}, .*? wrote:', text, flags=re.IGNORECASE | re.DOTALL)
-    if thread_match:
-        text = text[:thread_match.start()]
-    patterns = [
-        r'\n--\s*\n.*$',
-        r'\nOnwards,.*$',
-        r'\nThank you for your continued support,.*$',
-    ]
-    for pattern in patterns:
-        text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
-    return text
+    try:
+        thread_match = re.search(r'\nOn [A-Za-z]{3,9}, .*? wrote:', text, flags=re.IGNORECASE | re.DOTALL)
+        if thread_match:
+            text = text[:thread_match.start()]
+        patterns = [
+            r'\n--\s*\n.*$',
+            r'\nOnwards,.*$',
+            r'\nThank you for your continued support,.*$',
+        ]
+        for pattern in patterns:
+            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
+        return text
+    except (re.error, TypeError, ValueError):
+        return _as_text(text)
 
 
 def _relevant_metric_text(text: str) -> str:
@@ -335,33 +421,36 @@ def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, An
         return float(m.group(1)) if m else None
 
     for line in text.splitlines():
-        cleaned = line.strip().lstrip('-•').strip()
-        if not cleaned or ':' not in cleaned:
+        try:
+            cleaned = line.strip().lstrip('-•').strip()
+            if not cleaned or ':' not in cleaned:
+                continue
+            label, raw_value = cleaned.split(':', 1)
+            normalized = re.sub(r'\s+', ' ', label.strip().lower())
+            alias = metric_aliases.get(normalized)
+            if not alias:
+                continue
+            key, kind, period, currency = alias
+            if key in metrics:
+                continue
+            if kind == 'money':
+                parsed = parse_money(raw_value, currency=currency or 'USD', period=period)
+            elif kind == 'percent':
+                parsed = parse_percent(raw_value)
+            elif kind == 'int':
+                parsed = parse_int(raw_value)
+            elif kind == 'float':
+                parsed = parse_float(raw_value)
+            elif kind == 'hours':
+                parsed = parse_hours(raw_value)
+            elif kind == 'days':
+                parsed = parse_days(raw_value)
+            else:
+                parsed = None
+            if parsed is not None:
+                _set_metric(metrics, confidence, key, parsed, cleaned, CONFIDENCE_HIGH, 'labeled_line')
+        except (ValueError, TypeError, AttributeError, re.error):
             continue
-        label, raw_value = cleaned.split(':', 1)
-        normalized = re.sub(r'\s+', ' ', label.strip().lower())
-        alias = metric_aliases.get(normalized)
-        if not alias:
-            continue
-        key, kind, period, currency = alias
-        if key in metrics:
-            continue
-        if kind == 'money':
-            parsed = parse_money(raw_value, currency=currency or 'USD', period=period)
-        elif kind == 'percent':
-            parsed = parse_percent(raw_value)
-        elif kind == 'int':
-            parsed = parse_int(raw_value)
-        elif kind == 'float':
-            parsed = parse_float(raw_value)
-        elif kind == 'hours':
-            parsed = parse_hours(raw_value)
-        elif kind == 'days':
-            parsed = parse_days(raw_value)
-        else:
-            parsed = None
-        if parsed is not None:
-            _set_metric(metrics, confidence, key, parsed, cleaned, CONFIDENCE_HIGH, 'labeled_line')
 
     regex_specs = [
         ('cash', r'Cash(?: at (?:the end of the month|Bank))?\s*:\s*~?\s*(?:US\$|\$)?([\d,]+(?:\.\d+)?[mk]?)', lambda m: _parse_money_value(m.group(1)), CONFIDENCE_HIGH, 'runway_section'),
@@ -400,10 +489,14 @@ def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, An
     for name, pattern, builder, score, origin in regex_specs:
         if name in metrics:
             continue
-        m = re.search(pattern, text, re.IGNORECASE)
+        m = _safe_re_search(pattern, text, re.IGNORECASE)
         if not m:
             continue
-        _set_metric(metrics, confidence, name, builder(m), _line_snippet(text, m.start(), m.end()), score, origin)
+        try:
+            built = builder(m)
+            _set_metric(metrics, confidence, name, built, _line_snippet(text, m.start(), m.end()), score, origin)
+        except (ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError):
+            continue
 
     leasy_table_patterns = [
         ('arr', r'A\.R\.R\s*\n\$([\d,.]+[mk]?)', lambda m: _parse_money_value(m.group(1), period='annual'), CONFIDENCE_HIGH, 'kpi_deck'),
@@ -421,39 +514,56 @@ def extract_metrics(body_text: str | None) -> tuple[dict[str, Any], dict[str, An
     for name, pattern, builder, score, origin in leasy_table_patterns:
         if name in metrics:
             continue
-        m = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        try:
+            m = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        except re.error:
+            continue
         if not m:
             continue
-        _set_metric(metrics, confidence, name, builder(m), _line_snippet(text, m.start(), m.end()), score, origin)
+        try:
+            built = builder(m)
+            _set_metric(metrics, confidence, name, built, _line_snippet(text, m.start(), m.end()), score, origin)
+        except (ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError):
+            continue
 
-    yoy_matches = re.findall(r'(\d+(?:\.\d+)?)%\s+YoY', text, re.IGNORECASE)
+    try:
+        yoy_matches = re.findall(r'(\d+(?:\.\d+)?)%\s+YoY', text, re.IGNORECASE)
+    except re.error:
+        yoy_matches = []
     if yoy_matches and 'yoy_percentages' not in metrics:
-        metrics['yoy_percentages'] = [float(x) for x in yoy_matches]
-        confidence['yoy_percentages'] = {
-            'score': CONFIDENCE_LOW,
-            'origin': 'narrative_growth',
-            'source_snippet': ' '.join(re.findall(r'.{0,60}\d+(?:\.\d+)?%\s+YoY.{0,60}', text, re.IGNORECASE)[:2])[:400],
-        }
+        try:
+            metrics['yoy_percentages'] = [float(x) for x in yoy_matches]
+            snippet_bits = re.findall(r'.{0,60}\d+(?:\.\d+)?%\s+YoY.{0,60}', text, re.IGNORECASE)[:2]
+            confidence['yoy_percentages'] = {
+                'score': CONFIDENCE_LOW,
+                'origin': 'narrative_growth',
+                'source_snippet': ' '.join(snippet_bits)[:400],
+            }
+        except (ValueError, TypeError):
+            pass
 
     return metrics, confidence
 
 
 def _section_text(body_text: str | None, heading: str, stop_headings: list[str] | None = None, window: int = 5000) -> str:
-    text = _cleanup_section_text(body_text or '')
-    idx = text.lower().find(heading.lower())
-    if idx == -1:
+    try:
+        text = _cleanup_section_text(body_text or '')
+        idx = text.lower().find(heading.lower())
+        if idx == -1:
+            return ''
+        section = text[idx: idx + window]
+        if stop_headings:
+            lower_section = section.lower()
+            cut_positions = []
+            for stop in stop_headings:
+                pos = lower_section.find(stop.lower(), len(heading))
+                if pos != -1:
+                    cut_positions.append(pos)
+            if cut_positions:
+                section = section[: min(cut_positions)]
+        return section
+    except (TypeError, ValueError, AttributeError):
         return ''
-    section = text[idx: idx + window]
-    if stop_headings:
-        lower_section = section.lower()
-        cut_positions = []
-        for stop in stop_headings:
-            pos = lower_section.find(stop.lower(), len(heading))
-            if pos != -1:
-                cut_positions.append(pos)
-        if cut_positions:
-            section = section[: min(cut_positions)]
-    return section
 
 
 def extract_section_paragraphs(body_text: str | None, heading: str, stop_headings: list[str] | None = None) -> list[str]:
@@ -475,7 +585,11 @@ def extract_section_paragraphs(body_text: str | None, heading: str, stop_heading
             if item and set(item) != {'-'}:
                 out.append(item)
             continue
-        if len(line) > 40 and not re.match(r'^[A-Z][a-z]+:', line):
+        try:
+            is_label_line = bool(re.match(r'^[A-Z][a-z]+:', line))
+        except re.error:
+            is_label_line = False
+        if len(line) > 40 and not is_label_line:
             out.append(line)
     deduped = []
     for line in out:
@@ -497,7 +611,10 @@ def extract_section_by_aliases(body_text: str | None, aliases: list[str], stop_h
         section = _section_text(body_text, heading, stop_headings=stop_headings)
         if not section:
             continue
-        bullets = re.findall(r'\n\s*[-•]\s*(.+)', section)
+        try:
+            bullets = re.findall(r'\n\s*[-•]\s*(.+)', section)
+        except re.error:
+            bullets = []
         cleaned = []
         for item in bullets[:40]:
             item = re.sub(r'\s+', ' ', item).strip()
@@ -563,35 +680,53 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
     cleaned_body_text = _strip_signature(_cleanup_section_text(body_text))
     cleaned_attachment_text = _cleanup_section_text(attachment_text)
     combined_text = '\n\n'.join(part for part in [cleaned_body_text, cleaned_attachment_text] if part)
-    period = infer_period(subject, combined_text)
-    metrics, confidence = extract_metrics(combined_text)
+    try:
+        period = infer_period(subject, combined_text)
+    except Exception:
+        period = dict(_EMPTY_PERIOD)
+    try:
+        metrics, confidence = extract_metrics(combined_text)
+    except Exception:
+        metrics, confidence = {}, {}
     stop_headings = [
         'How you can help', 'Runway', 'Learn more', 'Asks', 'Thanks and Asks',
         'Fundraising & Financing', 'Fundraising - Equity', 'Product and Technology', 'Key Events', 'Team & Culture',
         'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing', '🏋 Challenges', 'Risks', 'Looking Ahead', '📈 KPIs',
         'Update on Fundraising / Lowlights and Focus Areas', 'Blurbs to facilitate connections you can help us with',
     ]
-    highlight_section = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
-    looking_ahead_section = extract_section_by_aliases(
-        combined_text,
-        ['Looking Ahead'],
-        ['Risks', 'Closing Thoughts', 'How you can help', 'Thanks and Asks']
-    )
-    highlight_items = (highlight_section or []) + (looking_ahead_section or [])
-    highlights = _filter_section_items(highlight_items, 'highlights')
-    asks = _filter_section_items(
-        extract_section_by_aliases(
+    try:
+        highlight_section = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
+        looking_ahead_section = extract_section_by_aliases(
             combined_text,
-            SECTION_ALIASES['asks'],
-            ['Runway', 'Learn more', 'Blurbs to facilitate connections', 'Highlights', 'Risks', 'Closing Thoughts', 'AltScore Investor/Internal Update', 'Investor/Internal Update', 'Investor Update']
-        ),
-        'asks',
-    )
-    risks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks', 'Highlights', 'Looking Ahead', '📈 KPIs', '2026 Overall Targets', 'Closing Thoughts']), 'risks')
+            ['Looking Ahead'],
+            ['Risks', 'Closing Thoughts', 'How you can help', 'Thanks and Asks']
+        )
+        highlight_items = (highlight_section or []) + (looking_ahead_section or [])
+        highlights = _filter_section_items(highlight_items, 'highlights')
+        asks = _filter_section_items(
+            extract_section_by_aliases(
+                combined_text,
+                SECTION_ALIASES['asks'],
+                ['Runway', 'Learn more', 'Blurbs to facilitate connections', 'Highlights', 'Risks', 'Closing Thoughts', 'AltScore Investor/Internal Update', 'Investor/Internal Update', 'Investor Update']
+            ),
+            'asks',
+        )
+        risks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks', 'Highlights', 'Looking Ahead', '📈 KPIs', '2026 Overall Targets', 'Closing Thoughts']), 'risks')
+    except Exception:
+        highlights, asks, risks = [], [], []
+    try:
+        inferred_company = infer_company(subject, body_text)
+        company_resolved = canonicalize_company_name(raw.get('company_name_hint') or inferred_company)
+    except Exception:
+        try:
+            hint = raw.get('company_name_hint')
+            company_resolved = canonicalize_company_name(hint) if hint else None
+        except Exception:
+            company_resolved = None
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
         'gmail_thread_id': raw.get('gmail_thread_id'),
-        'company_name': canonicalize_company_name(raw.get('company_name_hint') or infer_company(subject, body_text)),
+        'company_name': company_resolved,
         'subject': subject,
         'from_address': raw.get('from_address'),
         'to_addresses': raw.get('to_addresses', []),

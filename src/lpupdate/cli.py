@@ -209,6 +209,17 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
         service_account_subject=settings.google_service_account_subject,
     )
     service = build_gmail_client(cfg)
+
+    # Resolve Gmail label ids -> human-readable names once per run so that
+    # normalized records can preserve both `label_ids` and `label_names`.
+    label_id_to_name: dict[str, str] = {}
+    labels_resp = service.users().labels().list(userId="me").execute()
+    for label in labels_resp.get("labels", []) or []:
+        lid = label.get("id")
+        name = label.get("name")
+        if lid and name:
+            label_id_to_name[lid] = name
+
     response = service.users().messages().list(
         userId="me",
         q=settings.gmail_query,
@@ -227,8 +238,9 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
             id=item["id"],
             format="full",
         ).execute()
-        labels = full.get("labelIds", []) or []
-        normalized = normalize_message(full, labels)
+        label_ids = full.get("labelIds", []) or []
+        label_names = [label_id_to_name.get(lid, lid) for lid in label_ids]
+        normalized = normalize_message(full, label_ids, label_names)
         saved_attachments = []
         for attachment in normalized.get("attachments", []):
             saved = save_attachment(service, item['id'], attachment, attachment_dir / item['id'])

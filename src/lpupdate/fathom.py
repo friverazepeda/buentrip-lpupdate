@@ -1,6 +1,7 @@
 import urllib.request
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
 
@@ -63,14 +64,30 @@ def normalize_fathom_meeting(meeting: dict) -> dict:
     if transcript:
         body_text += f"\n--- TRANSCRIPT ---\n{transcript}\n"
 
+    created_at_raw = meeting.get('created_at')
+    # Fathom timestamps are generally ISO 8601; normalize to a consistent form
+    # while keeping the original in `received_at` for compatibility.
+    created_at_iso: str | None = None
+    if isinstance(created_at_raw, str) and created_at_raw.strip():
+        try:
+            cleaned = created_at_raw.replace('Z', '+00:00')
+            dt = datetime.fromisoformat(cleaned)
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=timezone.utc)
+            created_at_iso = dt.astimezone(timezone.utc).isoformat()
+        except Exception:
+            created_at_iso = None
+
     return {
         'gmail_message_id': f"fathom_{meeting_id}",
         'gmail_thread_id': f"fathom_{meeting_id}",
         'subject': f"Fathom Call: {title}",
         'from_address': meeting.get('recorded_by', {}).get('email', 'unknown@fathom.video'),
         'to_addresses': [inv.get('email') for inv in meeting.get('calendar_invitees', []) if inv.get('email')],
-        'received_at': meeting.get('created_at'),
+        # Preserve the original source timestamp and add a normalized variant.
+        'received_at': created_at_raw,
+        'received_at_iso': created_at_iso,
         'body_text': body_text,
         'attachments': [],
-        'source_type': 'fathom_meeting'
+        'source_type': 'fathom_meeting',
     }

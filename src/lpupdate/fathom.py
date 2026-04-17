@@ -18,11 +18,17 @@ class FathomClient:
             'Accept': 'application/json',
         }
 
-    def list_meetings(self, limit: int = 10, include_transcript: bool = True, include_summary: bool = True, created_after: str | None = None) -> list[dict[str, Any]]:
+    def list_meetings(self, limit: int | None = 10, include_transcript: bool = True, include_summary: bool = True, created_after: str | None = None) -> list[dict[str, Any]]:
         results: list[dict[str, Any]] = []
         cursor = None
-        while len(results) < limit:
-            page_size = min(50, max(1, limit - len(results)))
+        while True:
+            if limit is None:
+                page_size = 50
+            else:
+                remaining = limit - len(results)
+                if remaining <= 0:
+                    break
+                page_size = min(50, max(1, remaining))
             url = f"{self.base_url}/meetings?limit={page_size}"
             if include_transcript:
                 url += "&include_transcript=true"

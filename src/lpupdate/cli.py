@@ -51,6 +51,19 @@ def _write_stage_summary(stage_dir: Path, summary: dict[str, Any], extra: dict[s
     return str(path)
 
 
+def _limit_or_none(raw_limit: Any) -> int | None:
+    """
+    Treat 0/negative/invalid limits as "no limit".
+    """
+    try:
+        value = int(raw_limit)
+    except (TypeError, ValueError):
+        return None
+    if value <= 0:
+        return None
+    return value
+
+
 def cmd_doctor(_: argparse.Namespace) -> int:
     settings = Settings.from_env()
     payload = {
@@ -140,7 +153,13 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
     import json
     client = FathomClient(settings.fathom_api_key)
     summary = _new_stage_summary("fathom_fetch")
-    meetings = client.list_meetings(limit=args.limit, include_transcript=True, include_summary=True, created_after=args.created_after)
+    effective_limit = _limit_or_none(args.limit)
+    meetings = client.list_meetings(
+        limit=effective_limit,
+        include_transcript=True,
+        include_summary=True,
+        created_after=args.created_after,
+    )
     if args.title_match:
         meetings = [m for m in meetings if args.title_match.lower() in (m.get('title') or '').lower()]
     if args.company_match:
@@ -220,11 +239,14 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
         if lid and name:
             label_id_to_name[lid] = name
 
-    response = service.users().messages().list(
-        userId="me",
-        q=settings.gmail_query,
-        maxResults=args.limit,
-    ).execute()
+    effective_limit = _limit_or_none(args.limit)
+    list_kwargs: dict[str, Any] = {
+        "userId": "me",
+        "q": settings.gmail_query,
+    }
+    if effective_limit is not None:
+        list_kwargs["maxResults"] = effective_limit
+    response = service.users().messages().list(**list_kwargs).execute()
     messages = response.get("messages", []) or []
 
     data_dir = ensure_data_dir("data/raw_gmail")
@@ -283,7 +305,10 @@ def cmd_parse_raw(args: argparse.Namespace) -> int:
         sources.extend(sorted(raw_dir.glob("*.json")))
     if args.source in ('all', 'fathom'):
         sources.extend(sorted(fathom_dir.glob("*.json")))
-    raw_files = sorted(sources, key=lambda f: f.name)[: args.limit]
+    raw_files = sorted(sources, key=lambda f: f.name)
+    effective_limit = _limit_or_none(args.limit)
+    if effective_limit is not None:
+        raw_files = raw_files[:effective_limit]
     parsed: list[dict] = []
     summary = _new_stage_summary("parse_raw")
     summary_path = ""
@@ -419,7 +444,9 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
         parsed_files = [p for p in parsed_files if not p.name.startswith('fathom_')]
     elif args.source == 'fathom':
         parsed_files = [p for p in parsed_files if p.name.startswith('fathom_')]
-    parsed_files = parsed_files[: args.limit]
+    effective_limit = _limit_or_none(args.limit)
+    if effective_limit is not None:
+        parsed_files = parsed_files[:effective_limit]
     synced: list[dict] = []
     summary = _new_stage_summary("sync_postgres")
     summary_path = ""

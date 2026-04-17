@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 import django
 import json
-import psycopg
+# System/driver: psycopg2 (e.g. apt python3-psycopg2), not pip psycopg v3.
+import psycopg2
 
 # Allow direct execution via `python scripts/migrate_data.py` from repo root.
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -20,14 +21,14 @@ def run_migration():
     firm, _ = Firm.objects.get_or_create(name="BuenTrip Ventures Capital Management, LLC")
     print(f"Firm: {firm.name}")
 
-    # Connect to the database directly to read old tables using psycopg
+    # Connect to the database directly to read old tables (raw SQL, not Django ORM)
     # We do this because Django models don't map to the old tables
     db_url = os.environ.get('LPUPDATE_DATABASE_URL')
     if not db_url:
         print("Missing LPUPDATE_DATABASE_URL")
         return
 
-    with psycopg.connect(db_url) as conn:
+    with psycopg2.connect(db_url) as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT id, canonical_name, vehicles_json FROM companies;")
             companies_data = cur.fetchall()
@@ -39,7 +40,7 @@ def run_migration():
                 company_map[old_id] = startup
                 
                 if vehicles_json:
-                    # Depending on psycopg version, jsonb might be dict/list already
+                    # jsonb may come back as dict/list or str depending on adapter
                     if isinstance(vehicles_json, str):
                         try:
                             vehicles_json = json.loads(vehicles_json)

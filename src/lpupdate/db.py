@@ -3,14 +3,17 @@ from __future__ import annotations
 import json
 from typing import Any
 
-import psycopg
+# psycopg2 (e.g. python3-psycopg2 via apt) — same libpq wire protocol as psycopg3;
+# avoids requiring the separate pip-only psycopg v3 package on minimal systems.
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 from .schema import SCHEMA_SQL
 from .vehicles import canonicalize_company_name, vehicles_for_company
 
 
 def connect(database_url: str):
-    return psycopg.connect(database_url)
+    return psycopg2.connect(database_url)
 
 
 def apply_schema(database_url: str) -> None:
@@ -84,7 +87,7 @@ def upsert_email_message(cur, record: dict[str, Any]) -> int:
 
 def list_updates(database_url: str, limit: int = 20) -> list[dict[str, Any]]:
     with connect(database_url) as conn:
-        with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
                 SELECT
@@ -107,7 +110,7 @@ def list_updates(database_url: str, limit: int = 20) -> list[dict[str, Any]]:
 
 def get_update(database_url: str, update_id: int) -> dict[str, Any] | None:
     with connect(database_url) as conn:
-        with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
                 SELECT
@@ -139,7 +142,7 @@ def get_update(database_url: str, update_id: int) -> dict[str, Any] | None:
 
 def list_companies(database_url: str) -> list[dict[str, Any]]:
     with connect(database_url) as conn:
-        with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
                 SELECT
@@ -159,7 +162,7 @@ def list_companies(database_url: str) -> list[dict[str, Any]]:
 
 def get_company_updates(database_url: str, company_name: str) -> list[dict[str, Any]]:
     with connect(database_url) as conn:
-        with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
                 SELECT
@@ -189,7 +192,7 @@ def get_company_updates(database_url: str, company_name: str) -> list[dict[str, 
 
 def get_company_metrics(database_url: str, company_name: str) -> list[dict[str, Any]]:
     with connect(database_url) as conn:
-        with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
                 SELECT

@@ -1,0 +1,37 @@
+# A.2: unit tests + Phase 5 parse-only rollout checks (no Postgres, no API keys).
+name: lpupdate CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  lpupdate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package (imports lpupdate.cli need google-* deps)
+        run: pip install -e .
+
+      - name: Unit tests (lpupdate)
+        env:
+          PYTHONPATH: src
+        run: |
+          cd src
+          python3 -m unittest discover -s lpupdate/tests -p 'test_*.py' -v
+
+      - name: Phase 5 parse-only verification
+        env:
+          PYTHONPATH: src
+          LPUPDATE_PARSE_PROVIDER: rules
+        run: ./scripts/ci_phase5_parse_only.sh --clean

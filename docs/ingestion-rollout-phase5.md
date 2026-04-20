@@ -57,3 +57,34 @@ Treat **increases in `skipped` / quarantine** as a signal to inspect `reason_cod
 - Keep using unit tests for fast feedback: `cd src && python3 -m unittest discover -s lpupdate/tests -p 'test_*.py' -v`.
 
 For **parser-level** regression fixtures (metric keys, period inference, company hints), see `docs/ingestion-parser-regression.md`.
+
+---
+
+## A.2 — Operational checks (CI + pinned parse-only runs)
+
+**Goal:** Run Phase 5 **parse-only** verification automatically on every PR and offer a one-command local equivalent, without requiring Postgres or Gmail.
+
+### What runs in CI
+
+The workflow `.github/workflows/lpupdate-ci.yml`:
+
+1. **`cd src && python3 -m unittest discover …`** — full `lpupdate` unit test suite (including parser regression A.1).
+2. **`scripts/ci_phase5_parse_only.sh --clean`** — deletes `data/`, copies `rollout_samples` into `data/raw_*`, runs `parse-raw`, then `verify_ingestion_rollout.py check --parse-only`.
+
+This proves the CLI, `run_summary.json` from `parse_raw`, and parsed JSON contract checks still work together.
+
+### Local one-liner (same as CI)
+
+Use Python **3.11+** and install dependencies once (same as CI: `pip install -e .` from the repo root). Then from the repository root:
+
+```bash
+./scripts/ci_phase5_parse_only.sh --clean
+```
+
+The script is executable in git; if your checkout strips the bit, run `chmod +x scripts/ci_phase5_parse_only.sh` once.
+
+`--clean` removes `data/` first so the run matches CI and avoids stale raw/parsed files. Omit `--clean` only if you intentionally want to verify against whatever is already under `data/`.
+
+### Full sync verification (not in default CI)
+
+End-to-end checks including **quarantine** and **sync_postgres** `run_summary` still require `LPUPDATE_DATABASE_URL` and the commands in [One-shot workflow (offline parse + sync)](#one-shot-workflow-offline-parse--sync). Add a separate workflow with a Postgres service only when you want that path gated on every PR.

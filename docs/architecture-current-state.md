@@ -44,6 +44,8 @@ For a repeatable **offline** parse/sync check and artifact validation (ingestion
 
 For **parser regression** fixtures and metrics-to-UI verification, see `docs/ingestion-parser-regression.md`.
 
+For **A.2** CI and the `scripts/ci_phase5_parse_only.sh` helper, see the section *A.2 — Operational checks* in `docs/ingestion-rollout-phase5.md`.
+
 ## 2) What `dashboard/` is for
 
 `dashboard/` is a Django app for browsing portfolio/startup/report data and managing records via Django Admin.

@@ -88,3 +88,5 @@ If `metrics_json` is populated but Django shows no metrics, the data path may no
 - **Parser regression** (this doc) validates **rules-layer parsing behavior** on isolated fixtures.
 
 Run both after meaningful ingestion or parser changes.
+
+**A.2 (CI):** The same PR pipeline also runs `scripts/ci_phase5_parse_only.sh --clean` plus the full `lpupdate` unit suite; see *A.2 — Operational checks* in `docs/ingestion-rollout-phase5.md`.

@@ -51,6 +51,29 @@ def _write_stage_summary(stage_dir: Path, summary: dict[str, Any], extra: dict[s
     return str(path)
 
 
+def _quarantine_unsynced_record(
+    quarantine_dir: Path,
+    parsed_path: Path,
+    parsed: dict[str, Any],
+    raw_path: Path | None,
+    reason_code: str,
+    reason_detail: str,
+) -> Path:
+    payload = {
+        "gmail_message_id": parsed.get("gmail_message_id"),
+        "source_path": str(parsed_path),
+        "raw_source_path": str(raw_path) if raw_path is not None else None,
+        "company_name": parsed.get("company_name"),
+        "reason_code": reason_code,
+        "reason_detail": reason_detail,
+        "synced": False,
+        "generated_at_epoch_ms": int(time.time() * 1000),
+    }
+    out_path = quarantine_dir / parsed_path.name
+    write_json(out_path, payload)
+    return out_path
+
+
 def _limit_or_none(raw_limit: Any) -> int | None:
     """
     Treat 0/negative/invalid limits as "no limit".
@@ -449,6 +472,8 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
         parsed_files = parsed_files[:effective_limit]
     synced: list[dict] = []
     summary = _new_stage_summary("sync_postgres")
+    quarantine_dir = ensure_data_dir("data/quarantine_unsynced")
+    quarantined_count = 0
     summary_path = ""
 
     with connect(settings.database_url) as conn:
@@ -465,6 +490,15 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
                     else:
                         summary["skipped"] += 1
                         _increment_reason(summary, "skip_reasons", "raw_source_missing")
+                        _quarantine_unsynced_record(
+                            quarantine_dir=quarantine_dir,
+                            parsed_path=parsed_path,
+                            parsed=parsed,
+                            raw_path=None,
+                            reason_code="raw_source_missing",
+                            reason_detail="matching raw source JSON was not found in Gmail or Fathom raw directories",
+                        )
+                        quarantined_count += 1
                         continue
                 raw = load_raw_message(raw_path)
                 company_id = None
@@ -482,22 +516,40 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
                 else:
                     summary["skipped"] += 1
                     if not parsed.get('company_name'):
-                        _increment_reason(summary, "skip_reasons", "no_company_match")
+                        reason_code = "no_company_match"
+                        reason_detail = "parsed update has no company_name, so quarterly update is not persisted"
                     else:
                         has_content = any(
                             bool(parsed.get(field))
                             for field in ("summary", "highlights_json", "asks_json", "risks_json", "metrics_json")
                         )
                         if not has_content:
-                            _increment_reason(summary, "skip_reasons", "empty_content")
+                            reason_code = "empty_content"
+                            reason_detail = "parsed update has no summary/sections/metrics content"
                         else:
-                            _increment_reason(summary, "skip_reasons", "not_persisted")
+                            reason_code = "not_persisted"
+                            reason_detail = "upsert_quarterly_update returned no id for this parsed update"
+                    _increment_reason(summary, "skip_reasons", reason_code)
+                    _quarantine_unsynced_record(
+                        quarantine_dir=quarantine_dir,
+                        parsed_path=parsed_path,
+                        parsed=parsed,
+                        raw_path=raw_path,
+                        reason_code=reason_code,
+                        reason_detail=reason_detail,
+                    )
+                    quarantined_count += 1
         conn.commit()
 
     summary_path = _write_stage_summary(
         parsed_dir,
         summary,
-        extra={"source": args.source, "input_dir": str(parsed_dir)},
+        extra={
+            "source": args.source,
+            "input_dir": str(parsed_dir),
+            "quarantine_dir": str(quarantine_dir),
+            "quarantined_count": quarantined_count,
+        },
     )
     print(json.dumps({'count': len(synced), 'synced': synced}, indent=2))
     print(json.dumps({"event": "stage_summary", "path": summary_path, "stage": "sync_postgres"}))

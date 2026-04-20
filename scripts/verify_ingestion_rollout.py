@@ -7,11 +7,31 @@ import sys
 from pathlib import Path
 
 
+def _find_src_dir() -> Path:
+    """
+    Resolve .../src so `import lpupdate` works regardless of where this file lives
+    under the repo (e.g. scripts/ or a nested tools path).
+    """
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        candidate = parent / "src" / "lpupdate"
+        if candidate.is_dir() and (candidate / "__init__.py").is_file():
+            return parent / "src"
+    raise SystemExit(
+        "Could not find src/lpupdate in any parent of this script. "
+        "Run from a full repo checkout that contains src/lpupdate/rollout_verify.py."
+    )
+
+
 def _prepend_src() -> None:
-    root = Path(__file__).resolve().parents[1]
-    src = root / "src"
-    if str(src) not in sys.path:
-        sys.path.insert(0, str(src))
+    src = _find_src_dir()
+    rollout = src / "lpupdate" / "rollout_verify.py"
+    if not rollout.is_file():
+        raise SystemExit(
+            f"Missing {rollout}. Update your checkout (git pull) or restore rollout_verify.py."
+        )
+    # Prefer repo src over any globally installed older `lpupdate` egg.
+    sys.path.insert(0, str(src))
 
 
 def main() -> int:

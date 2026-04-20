@@ -40,6 +40,8 @@ Core run path used in docs/status:
 3. `db-apply` + `sync-postgres`
 4. `generate-report`
 
+For a repeatable **offline** parse/sync check and artifact validation (ingestion Phase 5), see `docs/ingestion-rollout-phase5.md` and `rollout_samples/`.
+
 ## 2) What `dashboard/` is for
 
 `dashboard/` is a Django app for browsing portfolio/startup/report data and managing records via Django Admin.

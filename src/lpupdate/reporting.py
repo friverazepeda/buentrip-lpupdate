@@ -8,6 +8,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
+from .store import iter_data_record_json_files
 from .vehicles import company_vehicle_type, vehicles_for_company
 
 
@@ -425,7 +426,7 @@ def generate_report_site(parsed_dir: str | Path, out_dir: str | Path) -> dict[st
     startup_dir = out_dir / 'startups'
     startup_dir.mkdir(parents=True, exist_ok=True)
 
-    parsed_records = [json.loads(p.read_text()) for p in sorted(parsed_dir.glob('*.json'))]
+    parsed_records = [json.loads(p.read_text()) for p in iter_data_record_json_files(parsed_dir)]
     latest_records = latest_by_company(parsed_records)
     grouped_records = records_by_company(parsed_records)
 

@@ -21,7 +21,7 @@ from .parse_updates import load_raw_message
 from .parsers import build_source_bundle, get_parse_provider
 from .reporting import generate_report_site
 from .schema import SCHEMA_SQL
-from .store import ensure_data_dir, write_json
+from .store import ensure_data_dir, iter_data_record_json_files, write_json
 
 
 def _new_stage_summary(stage: str) -> dict[str, Any]:
@@ -325,9 +325,9 @@ def cmd_parse_raw(args: argparse.Namespace) -> int:
     fathom_dir = ensure_data_dir("data/raw_fathom")
     sources = []
     if args.source in ('all', 'gmail'):
-        sources.extend(sorted(raw_dir.glob("*.json")))
+        sources.extend(iter_data_record_json_files(raw_dir))
     if args.source in ('all', 'fathom'):
-        sources.extend(sorted(fathom_dir.glob("*.json")))
+        sources.extend(iter_data_record_json_files(fathom_dir))
     raw_files = sorted(sources, key=lambda f: f.name)
     effective_limit = _limit_or_none(args.limit)
     if effective_limit is not None:
@@ -462,7 +462,7 @@ def cmd_sync_postgres(args: argparse.Namespace) -> int:
     raw_dir = ensure_data_dir('data/raw_gmail')
     fathom_dir = ensure_data_dir('data/raw_fathom')
     parsed_dir = ensure_data_dir('data/parsed_updates')
-    parsed_files = sorted(parsed_dir.glob('*.json'))
+    parsed_files = iter_data_record_json_files(parsed_dir)
     if args.source == 'gmail':
         parsed_files = [p for p in parsed_files if not p.name.startswith('fathom_')]
     elif args.source == 'fathom':

@@ -46,6 +46,8 @@ For **parser regression** fixtures and metrics-to-UI verification, see `docs/ing
 
 For **A.2** CI and the `scripts/ci_phase5_parse_only.sh` helper, see the section *A.2 — Operational checks* in `docs/ingestion-rollout-phase5.md`.
 
+For **full Gmail + Fathom → Postgres** runs (including optional DB truncate), see `docs/full-ingestion-runbook.md`. For **Stage B** parser quality work after a fresh ingest, see `docs/stage-b-parser-quality.md`.
+
 ## 2) What `dashboard/` is for
 
 `dashboard/` is a Django app for browsing portfolio/startup/report data and managing records via Django Admin.

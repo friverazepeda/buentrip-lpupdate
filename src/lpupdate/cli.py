@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -74,9 +75,13 @@ def _quarantine_unsynced_record(
     return out_path
 
 
+# Gmail messages.list allows at most 500 results per request; use pagination for more.
+_GMAIL_MESSAGES_LIST_PAGE_SIZE = 500
+
+
 def _limit_or_none(raw_limit: Any) -> int | None:
     """
-    Treat 0/negative/invalid limits as "no limit".
+    Treat 0/negative/invalid limits as "no limit" (caller may paginate until exhausted).
     """
     try:
         value = int(raw_limit)
@@ -263,14 +268,31 @@ def cmd_gmail_fetch(args: argparse.Namespace) -> int:
             label_id_to_name[lid] = name
 
     effective_limit = _limit_or_none(args.limit)
-    list_kwargs: dict[str, Any] = {
-        "userId": "me",
-        "q": settings.gmail_query,
-    }
-    if effective_limit is not None:
-        list_kwargs["maxResults"] = effective_limit
-    response = service.users().messages().list(**list_kwargs).execute()
-    messages = response.get("messages", []) or []
+    messages: list[dict[str, Any]] = []
+    page_token: str | None = None
+    while True:
+        list_kwargs: dict[str, Any] = {
+            "userId": "me",
+            "q": settings.gmail_query,
+        }
+        if effective_limit is not None:
+            remaining = effective_limit - len(messages)
+            if remaining <= 0:
+                break
+            list_kwargs["maxResults"] = min(_GMAIL_MESSAGES_LIST_PAGE_SIZE, remaining)
+        else:
+            list_kwargs["maxResults"] = _GMAIL_MESSAGES_LIST_PAGE_SIZE
+        if page_token:
+            list_kwargs["pageToken"] = page_token
+        response = service.users().messages().list(**list_kwargs).execute()
+        batch = response.get("messages", []) or []
+        messages.extend(batch)
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            break
+        if effective_limit is not None and len(messages) >= effective_limit:
+            messages = messages[:effective_limit]
+            break
 
     data_dir = ensure_data_dir("data/raw_gmail")
     attachment_dir = ensure_data_dir("data/attachments")
@@ -451,6 +473,48 @@ def cmd_db_apply(_: argparse.Namespace) -> int:
         raise ValueError('LPUPDATE_DATABASE_URL is not set')
     apply_schema(settings.database_url)
     print(json.dumps({'schema_applied': True}, indent=2))
+    return 0
+
+
+def cmd_db_reset(args: argparse.Namespace) -> int:
+    """
+    Truncate all lpupdate pipeline tables so the next sync repopulates from parsed JSON only.
+
+    Destroys rows in: attachments, quarterly_updates, email_messages, companies.
+    Does not touch Django's database unless LPUPDATE_DATABASE_URL points there.
+    """
+    if not args.yes:
+        print(
+            json.dumps(
+                {
+                    "error": "refusing destructive reset",
+                    "hint": "Re-run with --yes after backing up LPUPDATE_DATABASE_URL if needed",
+                },
+                indent=2,
+            )
+        )
+        return 1
+    settings = Settings.from_env()
+    if not settings.database_url:
+        raise ValueError("LPUPDATE_DATABASE_URL is not set")
+    # FK-safe single statement: children before parents is handled by CASCADE.
+    sql = """
+    TRUNCATE TABLE attachments, quarterly_updates, email_messages, companies
+    RESTART IDENTITY CASCADE;
+    """
+    with connect(settings.database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+        conn.commit()
+    print(
+        json.dumps(
+            {
+                "truncated": True,
+                "tables": ["attachments", "quarterly_updates", "email_messages", "companies"],
+            },
+            indent=2,
+        )
+    )
     return 0
 
 
@@ -645,6 +709,11 @@ def cmd_show_attachment_text(args: argparse.Namespace) -> int:
 
 
 def cmd_run_pipeline(args: argparse.Namespace) -> int:
+    # parse-raw reads Settings.from_env(); ensure CLI --provider wins for this run.
+    provider = getattr(args, "provider", None)
+    if provider:
+        os.environ["LPUPDATE_PARSE_PROVIDER"] = str(provider).lower()
+
     print("=== Running Full Pipeline ===")
     
     print("\n--- 1. Fetching Fathom Meetings ---")
@@ -706,7 +775,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_fathom_fetch)
 
     p = sub.add_parser("gmail-fetch", help="fetch raw Gmail messages for the configured query")
-    p.add_argument("--limit", type=int, default=10)
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="max messages to fetch (0 = no cap; paginates with 500 per Gmail API request until exhausted)",
+    )
     p.set_defaults(func=cmd_gmail_fetch)
 
     p = sub.add_parser("parse-raw", help="parse fetched raw Gmail messages into normalized update JSON")
@@ -722,6 +796,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("db-apply", help="apply Postgres schema")
     p.set_defaults(func=cmd_db_apply)
+
+    p = sub.add_parser(
+        "db-reset",
+        help="truncate lpupdate tables (attachments, quarterly_updates, email_messages, companies) for a full re-sync",
+    )
+    p.add_argument(
+        "--yes",
+        action="store_true",
+        help="required: confirm destructive truncate",
+    )
+    p.set_defaults(func=cmd_db_reset)
 
     p = sub.add_parser("sync-postgres", help="sync parsed updates into Postgres")
     p.add_argument("--limit", type=int, default=100)
@@ -760,7 +845,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_generate_report)
 
     p = sub.add_parser("run-pipeline", help="run the complete pipeline (fathom + gmail -> parse -> sync -> report)")
-    p.add_argument("--limit", type=int, default=0, help="limit for fetching and parsing (0 for no limit)")
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="cap for fetch/parse/sync (0 = no cap; Gmail fetch paginates, does not stop at API default of 100)",
+    )
     p.add_argument("--title-match", default=None, help="Only import meetings with this substring in the title")
     p.add_argument("--company-match", action="store_true", help="Only import meetings whose title contains a known company name from Postgres")
     p.add_argument("--created-after", default=None, help="ISO timestamp (e.g. 2025-12-01T00:00:00Z) to filter meetings")

@@ -1,0 +1,13 @@
+{
+  "gmail_message_id": "fixture_gmail_1",
+  "gmail_thread_id": "fixture_thread_1",
+  "subject": "Fwd: Acme Corp — Q4 2024 Investor Update",
+  "from_address": "founder@acme.com",
+  "to_addresses": ["lp@example.com"],
+  "received_at": "Mon, 15 Jan 2024 10:00:00 +0000",
+  "body_text": "Highlights\n- First bullet point with enough characters to pass filters here.\n- Second bullet with more detail about traction and growth metrics.\n\nHow you can help\n- Introduction to enterprise buyers in logistics.\n\nRisks\n- Market consolidation could pressure pricing in the sector.\n\nCash at Bank: $1.2m\nRunway: 18 months\n",
+  "attachments": [],
+  "label_ids": ["INBOX"],
+  "label_names": ["Inbox"],
+  "source_type": "gmail_message"
+}

@@ -1,0 +1,11 @@
+{
+  "gmail_message_id": "fathom_fixture_rec_1",
+  "gmail_thread_id": "fathom_fixture_rec_1",
+  "subject": "Fathom Call: Beta Inc Quarterly Sync",
+  "from_address": "recorder@fathom.video",
+  "to_addresses": ["team@example.com"],
+  "received_at": "2024-06-01T14:30:00Z",
+  "body_text": "FATHOM MEETING RECORDING\n\n--- SUMMARY ---\nDiscussed Q2 progress and pipeline.\n\n--- TRANSCRIPT ---\n[0.0] CEO: Revenue grew significantly YoY.\n",
+  "attachments": [],
+  "source_type": "fathom_meeting"
+}

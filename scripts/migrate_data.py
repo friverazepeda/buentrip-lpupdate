@@ -10,11 +10,15 @@ import psycopg2
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+_SRC = REPO_ROOT / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from dashboard.models import Firm, Vehicle, Startup, VehicleStartup, StartupUpdate, StartupMetric
+from lpupdate.metrics_display import format_metric_value_for_display
 
 def run_migration():
     print("Starting migration...")
@@ -124,7 +128,7 @@ def run_migration():
                             StartupMetric.objects.create(
                                 update=report,
                                 name=str(k)[:255],
-                                value=str(v)[:255]
+                                value=format_metric_value_for_display(v),
                             )
                             metrics_created += 1
 

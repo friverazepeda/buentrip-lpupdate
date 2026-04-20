@@ -1,0 +1,17 @@
+{
+  "id": "runway_and_cash",
+  "raw": {
+    "gmail_message_id": "regression_runway_cash_1",
+    "gmail_thread_id": "t1",
+    "subject": "Acme Robotics — Q4 2024 Investor Update",
+    "from_address": "ceo@acme.example",
+    "to_addresses": ["lp@example.com"],
+    "received_at": "2024-12-20T18:00:00Z",
+    "body_text": "Highlights\n- Strong quarter.\n\nCash at Bank: $1.2m\nRunway: 18 months\n"
+  },
+  "expected": {
+    "metrics_keys_contain": ["runway_months"],
+    "min_metric_count": 1,
+    "report_year": 2024
+  }
+}

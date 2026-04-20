@@ -1,0 +1,17 @@
+{
+  "id": "arr_headline",
+  "raw": {
+    "gmail_message_id": "regression_arr_1",
+    "gmail_thread_id": "t2",
+    "subject": "Beta Labs — Q1 2025 Update",
+    "from_address": "founder@beta.example",
+    "to_addresses": ["lp@example.com"],
+    "received_at": "2025-03-01T12:00:00Z",
+    "body_text": "Key KPIs\n\nTotal ARR EoQ: $2.6M USD\n\nHighlights\n- Revenue up.\n"
+  },
+  "expected": {
+    "metrics_keys_contain": ["arr"],
+    "min_metric_count": 1,
+    "report_year": 2025
+  }
+}

@@ -55,3 +55,5 @@ Treat **increases in `skipped` / quarantine** as a signal to inspect `reason_cod
 - Ship **one phase** of ingestion work at a time (observability → normalization → parser hardening → persistence audit).
 - Re-run this Phase 5 checklist after each merge.
 - Keep using unit tests for fast feedback: `cd src && python3 -m unittest discover -s lpupdate/tests -p 'test_*.py' -v`.
+
+For **parser-level** regression fixtures (metric keys, period inference, company hints), see `docs/ingestion-parser-regression.md`.

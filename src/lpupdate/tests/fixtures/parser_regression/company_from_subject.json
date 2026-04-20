@@ -1,0 +1,18 @@
+{
+  "id": "company_from_subject",
+  "raw": {
+    "gmail_message_id": "regression_company_1",
+    "gmail_thread_id": "t3",
+    "company_name_hint": "Birdie",
+    "subject": "Fwd: Portfolio update — Q3 2024",
+    "from_address": "ir@birdie.example",
+    "to_addresses": ["lp@example.com"],
+    "received_at": "2024-10-15T10:00:00Z",
+    "body_text": "Highlights\n- First bullet with enough text for the parser to treat as content.\n- Second bullet about growth and customers.\n\nHow you can help\n- None today.\n"
+  },
+  "expected": {
+    "company_name_contains": "Birdie",
+    "min_metric_count": 0,
+    "report_year": 2024
+  }
+}

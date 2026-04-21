@@ -16,7 +16,7 @@ if str(_SRC) not in sys.path:
 
 try:
     from lpupdate.metrics_display import format_metric_value_for_display
-    from lpupdate.narrative_cleanup import refine_summary_paragraph
+    from lpupdate.parse_updates import refine_summary_paragraph
 except ImportError:
     def format_metric_value_for_display(value, *, max_len=255):
         return str(value)[:max_len] if value is not None else ""

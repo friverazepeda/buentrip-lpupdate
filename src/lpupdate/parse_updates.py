@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .narrative_cleanup import clean_bullet_list, refine_summary_paragraph
 from .vehicles import canonicalize_company_name
 
 # Default period dict when inference fails (keeps downstream shape stable).
@@ -15,6 +14,74 @@ _EMPTY_PERIOD: dict[str, Any] = {
     'report_year': None,
     'report_month': None,
 }
+
+
+def clean_bullet_line(text: str) -> str:
+    """Strip noise from a single highlight/ask/risk line."""
+    if not text:
+        return ""
+    line = str(text).strip()
+    line = re.sub(r"(?i)^subject:\s*", "", line).strip()
+    line = re.sub(r"(?i)^re:\s*", "", line).strip()
+    line = re.sub(r"^\[[\d.]+\]\s*", "", line)
+    line = re.sub(r"\s+", " ", line).strip()
+    return line
+
+
+def clean_bullet_list(items: list[str]) -> list[str]:
+    out: list[str] = []
+    for raw in items:
+        cleaned = clean_bullet_line(raw)
+        if not cleaned or len(cleaned) < 3:
+            continue
+        if cleaned not in out:
+            out.append(cleaned)
+    return out[:24]
+
+
+def refine_summary_paragraph(text: str) -> str:
+    """
+    Turn body-derived text into a single readable paragraph: drop obvious
+    headers, Subject:/Forwarded lines, and collapse whitespace.
+    """
+    if not text:
+        return ""
+    lines: list[str] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if re.match(r"(?i)^subject:\s*", line):
+            line = re.sub(r"(?i)^subject:\s*", "", line).strip()
+        if re.match(r"(?i)^forwarded message\s*$", line):
+            continue
+        if re.match(r"(?i)^(from|to|cc|date|sent):\s*", line) and len(line) < 120:
+            continue
+        if "Forwarded message" in line and len(line) < 40:
+            continue
+        lines.append(line)
+    joined = " ".join(lines)
+    joined = re.sub(r"\s+", " ", joined).strip()
+    return joined[:2000]
+
+
+def parse_stringified_json_list(value: Any) -> list[str] | None:
+    """
+    If value is a string that looks like a JSON array of strings, parse it.
+    Used when downstream stored json.dumps(list) as text.
+    """
+    if not isinstance(value, str):
+        return None
+    s = value.strip()
+    if not s.startswith("["):
+        return None
+    try:
+        parsed = json.loads(s)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, list):
+        return None
+    return [str(x).strip() for x in parsed if str(x).strip()]
 
 
 def _as_text(value: Any) -> str:

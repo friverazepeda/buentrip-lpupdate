@@ -1,0 +1,13 @@
+{
+  "id": "stringified_highlights_migrate_shape",
+  "raw": {
+    "gmail_message_id": "regression_strlist_1",
+    "subject": "Demo Co — Q3 2025",
+    "body_text": "Highlights\n- First bullet with enough characters to pass minimum length checks.\n- Second bullet about traction and growth in the quarter.\n\nHow you can help\n- Intro to buyers.\n\nRisks\n- Competition remains a factor in the sector narrative.\n",
+    "received_at": "2025-09-01T12:00:00Z"
+  },
+  "expected": {
+    "min_metric_count": 0,
+    "report_year": 2025
+  }
+}

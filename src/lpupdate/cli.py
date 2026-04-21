@@ -188,43 +188,36 @@ def cmd_fathom_fetch(args: argparse.Namespace) -> int:
         include_summary=True,
         created_after=args.created_after,
     )
+    title_of = lambda m: (m.get('meeting_title') or m.get('title') or '')
+
     if args.title_match:
-        meetings = [m for m in meetings if args.title_match.lower() in (m.get('title') or '').lower()]
+        needle = args.title_match.lower()
+        meetings = [m for m in meetings if needle in title_of(m).lower()]
+
+    from .vehicles import canonicalize_company_name, match_portfolio_company_in_title
+
+    if not args.all_meetings:
+        meetings = [m for m in meetings if match_portfolio_company_in_title(title_of(m))]
+
     if args.company_match:
         from .db import list_companies
         rows = list_companies(settings.database_url)
         known_companies = [r['canonical_name'].lower() for r in rows] if rows else []
-        matched = []
-        for m in meetings:
-            title = (m.get('title') or '').lower()
-            if any(company in title for company in known_companies):
-                matched.append(m)
-        meetings = matched
-        
+        meetings = [
+            m for m in meetings
+            if any(c in title_of(m).lower() for c in known_companies)
+        ]
+
     data_dir = ensure_data_dir("data/raw_fathom")
     fetched = []
-    
-    # We do a second pass to inject the matched company name into the raw json
-    # so that the rules parser doesn't have to guess it blindly from the text.
-    from .db import list_companies
-    rows = list_companies(settings.database_url)
-    known_companies_raw = [r['canonical_name'] for r in rows] if rows else []
-    
-    from .vehicles import canonicalize_company_name
-    
+
     summary_path = ""
     for item in meetings:
         normalized = normalize_fathom_meeting(item)
-        
-        title = (item.get('title') or '').lower()
-        matched_company = None
-        for company in known_companies_raw:
-            if company.lower() in title:
-                matched_company = canonicalize_company_name(company)
-                break
-                
+
+        matched_company = match_portfolio_company_in_title(title_of(item))
         if matched_company:
-            normalized['company_name_hint'] = matched_company
+            normalized['company_name_hint'] = canonicalize_company_name(matched_company) or matched_company
             
         mid = normalized['gmail_message_id']
         path = data_dir / f"{mid}.json"
@@ -770,7 +763,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("fathom-fetch", help="fetch recent Fathom meetings as pseudo-updates")
     p.add_argument("--limit", type=int, default=10)
     p.add_argument("--title-match", help="Only import meetings with this substring in the title")
-    p.add_argument("--company-match", action="store_true", help="Only import meetings whose title contains a known company name from Postgres")
+    p.add_argument(
+        "--all-meetings",
+        action="store_true",
+        help="Import every meeting from the API (default: only titles matching portfolio companies in vehicles.py)",
+    )
+    p.add_argument("--company-match", action="store_true", help="Additionally require a Postgres company name in the title")
     p.add_argument("--created-after", help="ISO timestamp (e.g. 2025-12-01T00:00:00Z) to filter meetings")
     p.set_defaults(func=cmd_fathom_fetch)
 

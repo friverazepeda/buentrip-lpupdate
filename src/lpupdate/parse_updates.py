@@ -113,7 +113,11 @@ MONTHS = {
 
 
 SECTION_ALIASES = {
-    'highlights': ['Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?', 'Investor Update – Q4', '🏆 Achievements', '📈 Traction', 'TLDR'],
+    'highlights': [
+        'Key updates', 'Highlights', 'Highlights & Product', 'Key Events', 'What did we DO last month?',
+        'Investor Update – Q4', '🏆 Achievements', '📈 Traction', 'TLDR',
+        'Executive summary', 'Business highlights', 'Quarter in review', 'Key metrics snapshot',
+    ],
     'asks': ['How you can help', 'Asks', 'Thanks and Asks', '👍 How can you help?', '🙏 Asks', 'Blurbs to facilitate connections you can help us with'],
     'risks': ['Risks', 'The Bad', '🔴 The Bad: Strategic Consolidation', '🏋 Challenges', 'Update on Fundraising / Lowlights and Focus Areas'],
 }
@@ -122,7 +126,7 @@ SECTION_ALIASES = {
 SECTION_START_HINTS = [
     'key updates', 'highlights', 'kpi', 'kpi’s', "kpi's", 'runway', 'debt & finance',
     'debt & financing', 'fundraising', 'operations', 'tech', 'peru monthly kpi',
-    'mexico monthly kpi', 'leasy kpi', 'investor update – q4', 'investor update - q4',
+    'mexico monthly kpi', 'leasy kpi', 'shippify', 'reliv', 'investor update – q4', 'investor update - q4',
 ]
 
 
@@ -342,6 +346,7 @@ def _cleanup_section_text(text: str) -> str:
         value = re.sub(r'^\s*Schedule time with me!?\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
         value = re.sub(r'^\s*SPA:\s*$', '', value, flags=re.MULTILINE)
         value = re.sub(r'^\s*ENG:\s*$', '', value, flags=re.MULTILINE)
+        value = re.sub(r'^\s*FATHOM MEETING RECORDING\s*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
         value = re.sub(r'^\*?Confidential\..*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
         value = re.sub(r'^\*?This update and its contents are confidential.*$', '', value, flags=re.MULTILINE | re.IGNORECASE)
         value = re.sub(r'^\*?Blurbs to facilitate connections you can help us with:?\*?$', 'How you can help', value, flags=re.MULTILINE | re.IGNORECASE)
@@ -711,6 +716,45 @@ def summarize(body_text: str | None) -> str:
     return refine_summary_paragraph(raw)[:1200]
 
 
+def _text_for_summary(raw: dict[str, Any], combined_text: str) -> str:
+    """Fathom updates: weight the API summary over raw transcript for the short summary field."""
+    if raw.get('source_type') != 'fathom_meeting':
+        return combined_text
+    m = _safe_re_search(
+        r'---\s*SUMMARY\s*---\s*(.*?)(?=---\s*TRANSCRIPT\s*---|\Z)',
+        combined_text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if not m:
+        return combined_text
+    block = (m.group(1) or '').strip()
+    if len(block) < 40:
+        return combined_text
+    tail = ''
+    tm = _safe_re_search(r'---\s*TRANSCRIPT\s*---\s*(.*)\Z', combined_text, re.DOTALL | re.IGNORECASE)
+    if tm:
+        tail = (tm.group(1) or '').strip()[:1200]
+    return f'{block}\n\n{tail}'.strip() if tail else block
+
+
+def _cap_metrics_by_confidence(
+    metrics: dict[str, Any],
+    confidence: dict[str, Any],
+    max_metrics: int = 18,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if len(metrics) <= max_metrics:
+        return metrics, confidence
+    scored: list[tuple[float, str]] = []
+    for key in metrics:
+        sc = float((confidence.get(key) or {}).get('score') or 0.5)
+        scored.append((sc, key))
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    keep = {k for _, k in scored[:max_metrics]}
+    new_m = {k: metrics[k] for k in metrics if k in keep}
+    new_c = {k: confidence[k] for k in confidence if k in keep}
+    return new_m, new_c
+
+
 def _filter_section_items(items: list[str], kind: str) -> list[str]:
     filtered: list[str] = []
     banned_substrings = {
@@ -757,11 +801,13 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         metrics, confidence = extract_metrics(combined_text)
     except Exception:
         metrics, confidence = {}, {}
+    metrics, confidence = _cap_metrics_by_confidence(metrics, confidence, max_metrics=18)
     stop_headings = [
         'How you can help', 'Runway', 'Learn more', 'Asks', 'Thanks and Asks',
         'Fundraising & Financing', 'Fundraising - Equity', 'Product and Technology', 'Key Events', 'Team & Culture',
         'Wrapped & Founders Reflection', 'Debt & Finance', 'Debt & Financing', '🏋 Challenges', 'Risks', 'Looking Ahead', '📈 KPIs',
         'Update on Fundraising / Lowlights and Focus Areas', 'Blurbs to facilitate connections you can help us with',
+        'Executive summary', 'Business highlights',
     ]
     try:
         highlight_section = extract_section_by_aliases(combined_text, SECTION_ALIASES['highlights'], stop_headings)
@@ -804,7 +850,7 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         'to_addresses': raw.get('to_addresses', []),
         'received_at': raw.get('received_at'),
         **period,
-        'summary': summarize(combined_text),
+        'summary': summarize(_text_for_summary(raw, combined_text)),
         'metrics_json': metrics,
         'highlights_json': highlights,
         'asks_json': asks,

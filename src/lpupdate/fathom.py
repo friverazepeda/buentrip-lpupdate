@@ -7,6 +7,23 @@ from urllib.error import HTTPError, URLError
 
 logger = logging.getLogger(__name__)
 
+
+def _transcript_text_for_parser(transcript_raw: Any) -> str:
+    """Speaker: line format without timestamp brackets (easier for summary/section parsing)."""
+    if not isinstance(transcript_raw, list):
+        return str(transcript_raw or "")
+    lines: list[str] = []
+    for seg in transcript_raw:
+        if not isinstance(seg, dict):
+            continue
+        speaker = (seg.get("speaker_name") or "").strip() or "Speaker"
+        text = (seg.get("text") or "").strip()
+        if not text:
+            continue
+        lines.append(f"{speaker}: {text}")
+    return "\n".join(lines)
+
+
 class FathomClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -59,10 +76,7 @@ def normalize_fathom_meeting(meeting: dict) -> dict:
     # Combine summary and transcript into body_text so the parser can handle it
     summary = meeting.get('default_summary', {}).get('markdown', '') if meeting.get('default_summary') else ''
     transcript_raw = meeting.get('transcript') or []
-    if isinstance(transcript_raw, list):
-        transcript = '\n'.join(f"[{seg.get('timestamp_seconds', 0.0)}] {seg.get('speaker_name', 'Unknown')}: {seg.get('text', '')}" for seg in transcript_raw if isinstance(seg, dict))
-    else:
-        transcript = str(transcript_raw)
+    transcript = _transcript_text_for_parser(transcript_raw)
     
     body_text = "FATHOM MEETING RECORDING\n"
     if summary:

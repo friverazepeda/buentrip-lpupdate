@@ -41,6 +41,19 @@ class TestParserRegressionFixtures(unittest.TestCase):
                 if "company_name_contains" in exp:
                     name = out.get("company_name") or ""
                     self.assertIn(exp["company_name_contains"], name)
+                if "min_highlights" in exp:
+                    self.assertGreaterEqual(
+                        len(out.get("highlights_json") or []),
+                        int(exp["min_highlights"]),
+                    )
+                if "max_metric_count" in exp:
+                    self.assertLessEqual(
+                        len(out.get("metrics_json") or {}),
+                        int(exp["max_metric_count"]),
+                    )
+                if "summary_contains" in exp:
+                    summary = (out.get("summary") or "").lower()
+                    self.assertIn(exp["summary_contains"].lower(), summary)
 
 
 if __name__ == "__main__":

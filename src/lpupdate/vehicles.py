@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Final
 
 FUND_I: Final[str] = 'BuenTrip Ventures Fund I'
@@ -82,3 +83,36 @@ def company_vehicle_type(vehicle_name: str) -> str:
     if vehicle_name in {FUND_I, FUND_II}:
         return 'fund'
     return 'spv'
+
+
+def _company_token_in_title(name: str, lowered_title: str) -> bool:
+    """Avoid short-name false positives (e.g. MOX inside unrelated words)."""
+    token = name.strip().lower()
+    if not token:
+        return False
+    if ' ' in token:
+        return token in lowered_title
+    if len(token) <= 4:
+        return bool(re.search(rf'(?<![a-z0-9]){re.escape(token)}(?![a-z0-9])', lowered_title, re.IGNORECASE))
+    return token in lowered_title
+
+
+def match_portfolio_company_in_title(title: str | None) -> str | None:
+    """
+    If a Fathom (or other) title mentions a portfolio company, return the
+    canonical name. Longer names are checked first to reduce substring collisions.
+    """
+    if not title:
+        return None
+    lowered = str(title).lower()
+    for name in sorted(COMPANY_VEHICLES.keys(), key=len, reverse=True):
+        if _company_token_in_title(name, lowered):
+            return name
+    for alias, canonical in sorted(COMPANY_ALIASES.items(), key=lambda kv: len(kv[0]), reverse=True):
+        if _company_token_in_title(alias, lowered):
+            return canonical
+    return None
+
+
+def fathom_title_matches_portfolio_company(title: str | None) -> bool:
+    return match_portfolio_company_in_title(title) is not None

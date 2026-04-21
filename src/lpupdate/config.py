@@ -35,6 +35,8 @@ class Settings:
     bem_function_name: str | None
     bem_workflow_name: str | None
     fathom_api_key: str | None
+    openai_api_key: str | None
+    openai_model: str | None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -52,4 +54,6 @@ class Settings:
             bem_function_name=os.getenv("BEM_FUNCTION_NAME"),
             bem_workflow_name=os.getenv("BEM_WORKFLOW_NAME"),
             fathom_api_key=os.getenv("FATHOM_API_KEY"),
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            openai_model=os.getenv("OPENAI_MODEL"),
         )

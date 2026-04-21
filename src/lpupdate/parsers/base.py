@@ -74,4 +74,8 @@ def get_parse_provider(settings) -> ParseProvider:
         from .hybrid import HybridParseProvider
 
         return HybridParseProvider(settings)
+    if provider == 'llm':
+        from .llm import LlmParseProvider
+
+        return LlmParseProvider(settings)
     raise UnknownParseProviderError(f'Unknown parse provider: {provider}')

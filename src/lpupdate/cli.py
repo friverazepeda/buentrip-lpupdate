@@ -105,6 +105,8 @@ def cmd_doctor(_: argparse.Namespace) -> int:
         "bem_timeout_seconds": settings.bem_timeout_seconds,
         "bem_function_name": settings.bem_function_name,
         "bem_workflow_name": settings.bem_workflow_name,
+        "openai_api_key_present": bool(settings.openai_api_key),
+        "openai_model": settings.openai_model,
     }
     print(json.dumps(payload, indent=2))
     return 0
@@ -789,7 +791,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("bem-sample-run", help="run the parse provider on the curated BEM eval set")
     p.add_argument("--sample-file", default="samples/bem_eval_samples.json", help="path to the Gmail id list")
-    p.add_argument("--provider", choices=["bem", "hybrid", "rules"], default="bem")
+    p.add_argument("--provider", choices=["bem", "hybrid", "rules", "llm"], default="bem")
     p.set_defaults(func=cmd_bem_sample_run)
 
     p = sub.add_parser("db-apply", help="apply Postgres schema")

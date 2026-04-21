@@ -1,0 +1,18 @@
+{
+  "id": "pdf_shippify_narrative",
+  "raw": {
+    "gmail_message_id": "reg_pdf_ship_1",
+    "gmail_thread_id": "t_pdf_ship",
+    "subject": "Fwd: Shippify BOD Update - January 2026",
+    "company_name_hint": "Shippify",
+    "body_text": "",
+    "received_at": "2026-01-20T18:00:00Z",
+    "attachment_text": "Executive Summary\n\nWe expanded into two new regional markets during the quarter. Carrier adoption remained strong across our core logistics network.\n\nHighlights\n- First operational bullet with enough characters to pass section filters and describe traction clearly.\n- Second bullet covering product milestones and enterprise customers with sufficient detail here.\n\nRisks\n- Competitive pressure in the freight segment described with enough text for the risk filter.\n"
+  },
+  "expected": {
+    "min_highlights": 1,
+    "max_metric_count": 8,
+    "company_name_contains": "Shippify",
+    "report_year": 2026
+  }
+}

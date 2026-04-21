@@ -1,0 +1,19 @@
+{
+  "id": "fathom_reliv_quarterly",
+  "raw": {
+    "gmail_message_id": "fathom_reliv_fixture_1",
+    "gmail_thread_id": "fathom_reliv_fixture_1",
+    "subject": "Fathom Call: BTV<>Reliv Quarterly Review",
+    "company_name_hint": "Reliv",
+    "from_address": "recorder@fathom.video",
+    "to_addresses": ["lp@example.com"],
+    "received_at": "2026-01-07T19:54:20Z",
+    "body_text": "FATHOM MEETING RECORDING\n\n--- SUMMARY ---\nDiscussed revenue growth, Mexico profitability, and clinical pipeline milestones for the quarter.\n\n--- TRANSCRIPT ---\nCEO: We closed two new partnerships and stabilized recurring revenue.\nCFO: Cash position remains adequate for the current roadmap.\n",
+    "attachments": [],
+    "source_type": "fathom_meeting"
+  },
+  "expected": {
+    "company_name_contains": "Reliv",
+    "summary_contains": "revenue"
+  }
+}

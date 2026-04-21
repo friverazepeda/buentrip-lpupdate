@@ -1,0 +1,17 @@
+{
+  "id": "pdf_leasy_metrics",
+  "raw": {
+    "gmail_message_id": "reg_pdf_leasy_1",
+    "gmail_thread_id": "t_pdf_leasy",
+    "subject": "Fwd: Leasy — Investor Update Q1 2025",
+    "company_name_hint": "Leasy",
+    "body_text": "Please find the monthly deck attached.",
+    "received_at": "2025-03-15T12:00:00Z",
+    "attachment_text": "This investor update deck summarizes Q1 2025 performance, runway, and hiring for the lending platform.\n\nA.R.R\n$2.5m\n\nRunway: 14 months\n\nTeam Size\n(+2)\n12\n"
+  },
+  "expected": {
+    "metrics_keys_contain": ["arr", "runway_months"],
+    "company_name_contains": "Leasy",
+    "report_year": 2025
+  }
+}

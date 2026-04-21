@@ -23,12 +23,12 @@ type ApiReport = {
   quarter?: string | null;
   year?: number | null;
   received_at?: string | null;
-  highlights?: string | null;
+  highlights?: string | string[] | null;
   opportunities_and_challenges?: string | null;
   metrics?: ApiReportMetric[] | null;
   fundraising_updates?: string | null;
-  asks?: string | null;
-  risks?: string | null;
+  asks?: string | string[] | null;
+  risks?: string | string[] | null;
   
 };
 
@@ -52,9 +52,25 @@ type NormalizedReportDetail = {
   risks: string[];
 };
 
-function toLines(value?: string | null): string[] {
-  if (!value) return [];
-  return value
+/** API may return JSON arrays or legacy newline / stringified-JSON text. */
+function toBulletList(value?: string | string[] | null): string[] {
+  if (value == null) return [];
+  if (Array.isArray(value)) {
+    return value.map((x) => String(x).trim()).filter(Boolean);
+  }
+  const s = String(value).trim();
+  if (!s) return [];
+  if (s.startsWith("[")) {
+    try {
+      const parsed: unknown = JSON.parse(s);
+      if (Array.isArray(parsed)) {
+        return parsed.map((x) => String(x).trim()).filter(Boolean);
+      }
+    } catch {
+      /* fall through to line split */
+    }
+  }
+  return s
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
@@ -70,7 +86,8 @@ function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
   const summary = [rawReport.opportunities_and_challenges, rawReport.fundraising_updates]
     .map((part) => (part ?? "").trim())
     .filter(Boolean)
-    .join("\n\n");
+    .join("\n\n")
+    .trim();
 
   const metrics: NormalizedMetric[] = (rawReport.metrics ?? []).map((metric, index) => ({
     label: metric.name?.trim() || `Metric ${index + 1}`,
@@ -86,9 +103,9 @@ function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
     investmentVehicles,
     summary,
     metrics,
-    highlights: toLines(rawReport.highlights),
-    asks: toLines(rawReport.asks),
-    risks: toLines(rawReport.risks),
+    highlights: toBulletList(rawReport.highlights),
+    asks: toBulletList(rawReport.asks),
+    risks: toBulletList(rawReport.risks),
   };
 }
 

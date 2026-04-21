@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .narrative_cleanup import clean_bullet_list, refine_summary_paragraph
 from .vehicles import canonicalize_company_name
 
 # Default period dict when inference fails (keeps downstream shape stable).
@@ -639,7 +640,8 @@ def summarize(body_text: str | None) -> str:
         return ''
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     useful = [line for line in lines if len(line) > 40 and 'Forwarded message' not in line][:5]
-    return ' '.join(useful)[:1200]
+    raw = ' '.join(useful)[:1200]
+    return refine_summary_paragraph(raw)[:1200]
 
 
 def _filter_section_items(items: list[str], kind: str) -> list[str]:
@@ -714,6 +716,9 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         risks = _filter_section_items(extract_section_by_aliases(combined_text, SECTION_ALIASES['risks'], ['How you can help', 'Asks', 'Thanks and Asks', 'Highlights', 'Looking Ahead', '📈 KPIs', '2026 Overall Targets', 'Closing Thoughts']), 'risks')
     except Exception:
         highlights, asks, risks = [], [], []
+    highlights = clean_bullet_list(highlights)
+    asks = clean_bullet_list(asks)
+    risks = clean_bullet_list(risks)
     try:
         inferred_company = infer_company(subject, body_text)
         company_resolved = canonicalize_company_name(raw.get('company_name_hint') or inferred_company)

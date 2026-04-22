@@ -45,6 +45,15 @@ def _format_dict_metric(d: dict[str, Any]) -> str:
         if period:
             return f"{base} ({period})"
         return base
+    if "value" in d:
+        base = str(d.get("value") or "").strip()
+        unit = str(d.get("unit") or "").strip()
+        period = str(d.get("period") or "").strip()
+        if unit and unit.lower() not in base.lower():
+            base = f"{base} {unit}".strip()
+        if period:
+            base = f"{base} ({period})".strip()
+        return base
     if "low" in d and "high" in d and isinstance(d["low"], (int, float)) and isinstance(d["high"], (int, float)):
         cur = d.get("currency") or "USD"
         return f"{_format_money_amount(float(d['low']), cur)} – {_format_money_amount(float(d['high']), cur)}"
@@ -53,7 +62,10 @@ def _format_dict_metric(d: dict[str, Any]) -> str:
         pv, cv = d["previous_value"], d["current_value"]
         if isinstance(pv, (int, float)) and isinstance(cv, (int, float)):
             return f"{_format_money_amount(float(pv), cur)} → {_format_money_amount(float(cv), cur)}"
-    return json.dumps(d, ensure_ascii=False, separators=(",", ":"))
+        return f"{pv} → {cv}"
+    # Last-resort human readable mapping (never leak a raw JSON object).
+    pairs = [f"{k}: {v}" for k, v in d.items() if v is not None and str(v).strip()]
+    return ", ".join(pairs) if pairs else ""
 
 
 def _format_money_amount(amount: float, currency: str) -> str:

@@ -24,6 +24,14 @@ class TestFormatMetricValueForDisplay(unittest.TestCase):
         self.assertEqual(format_metric_value_for_display(42), "42")
         self.assertEqual(format_metric_value_for_display("hello"), "hello")
 
+    def test_string_value_metric_with_period(self) -> None:
+        s = format_metric_value_for_display({"value": "Profitable", "period": "Q1 2026"})
+        self.assertEqual(s, "Profitable (Q1 2026)")
+
+    def test_string_value_metric_with_unit_and_period(self) -> None:
+        s = format_metric_value_for_display({"value": "<1%", "unit": "%", "period": "Q1 2026"})
+        self.assertEqual(s, "<1% (Q1 2026)")
+
 
 if __name__ == "__main__":
     unittest.main()

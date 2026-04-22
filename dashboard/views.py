@@ -204,11 +204,16 @@ def api_report_by_id(request, id):
         'source_label': _source_type_label(report.source_type),
         'source_occurred_at': _dt_iso(report.source_occurred_at),
         'ingestion_ran_at': _dt_iso(report.ingestion_ran_at),
+        'summary': _clean_narrative_block(report.opportunities_and_challenges),
         'opportunities_and_challenges': _clean_narrative_block(report.opportunities_and_challenges),
         'fundraising_updates': _clean_narrative_block(report.fundraising_updates),
+        'highlights_json': _section_field_to_list(report.highlights),
+        'asks_json': _section_field_to_list(report.asks),
+        'risks_json': _section_field_to_list(report.risks),
+        # Backward-compatible aliases for existing frontend consumers.
         'highlights': _section_field_to_list(report.highlights),
-        'risks': _section_field_to_list(report.risks),
         'asks': _section_field_to_list(report.asks),
+        'risks': _section_field_to_list(report.risks),
         'people': report.people,
         'metrics': metrics,
     }

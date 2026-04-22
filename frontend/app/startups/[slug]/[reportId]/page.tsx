@@ -27,11 +27,15 @@ type ApiReport = {
   source_label?: string | null;
   source_occurred_at?: string | null;
   ingestion_ran_at?: string | null;
+  highlights_json?: string | string[] | null;
   highlights?: string | string[] | null;
+  summary?: string | null;
   opportunities_and_challenges?: string | null;
   metrics?: ApiReportMetric[] | null;
   fundraising_updates?: string | null;
+  asks_json?: string | string[] | null;
   asks?: string | string[] | null;
+  risks_json?: string | string[] | null;
   risks?: string | string[] | null;
   
 };
@@ -52,7 +56,7 @@ type NormalizedReportDetail = {
   ingestedAt: string;
   subject: string;
   investmentVehicles: string[];
-  summary: string;
+  opportunitiesAndChallenges: string;
   metrics: NormalizedMetric[];
   highlights: string[];
   asks: string[];
@@ -101,11 +105,7 @@ function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
   const subject = rawReport.subject?.trim() || "";
   const investmentVehicles = rawReport.vehicle_name?.trim() ? [rawReport.vehicle_name.trim()] : [];
 
-  const summary = [rawReport.opportunities_and_challenges, rawReport.fundraising_updates]
-    .map((part) => (part ?? "").trim())
-    .filter(Boolean)
-    .join("\n\n")
-    .trim();
+  const opportunitiesAndChallenges = (rawReport.summary ?? rawReport.opportunities_and_challenges ?? "").trim();
 
   const metrics: NormalizedMetric[] = (rawReport.metrics ?? []).map((metric, index) => ({
     label: metric.name?.trim() || `Metric ${index + 1}`,
@@ -122,11 +122,11 @@ function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
     ingestedAt,
     subject,
     investmentVehicles,
-    summary,
+    opportunitiesAndChallenges,
     metrics,
-    highlights: toBulletList(rawReport.highlights),
-    asks: toBulletList(rawReport.asks),
-    risks: toBulletList(rawReport.risks),
+    highlights: toBulletList(rawReport.highlights_json ?? rawReport.highlights),
+    asks: toBulletList(rawReport.asks_json ?? rawReport.asks),
+    risks: toBulletList(rawReport.risks_json ?? rawReport.risks),
   };
 }
 
@@ -268,9 +268,9 @@ export default async function ReportPage({ params }: PageProps) {
       </div>
 
       <section style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16, margin: "18px 0" }}>
-        <h2 style={{ color: "#16324f", marginBottom: 12 }}>Summary</h2>
-        {report.summary.trim() ? (
-          <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{report.summary}</p>
+        <h2 style={{ color: "#16324f", marginBottom: 12 }}>Opportunities &amp; Challenges</h2>
+        {report.opportunitiesAndChallenges.trim() ? (
+          <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{report.opportunitiesAndChallenges}</p>
         ) : (
           <p style={{ color: "#555", margin: 0 }}>None</p>
         )}

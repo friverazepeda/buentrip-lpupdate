@@ -92,6 +92,12 @@ class QuarterlyLPReport(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='lp_reports')
     quarter = models.CharField(max_length=10) # e.g. Q4
     year = models.IntegerField()
+    report_period_label = models.CharField(max_length=32, blank=True, null=True)
+    status = models.CharField(
+        max_length=16,
+        choices=(('Draft', 'Draft'), ('Published', 'Published')),
+        default='Draft',
+    )
     
     # Fund level narratives
     summary_of_progress = models.TextField(blank=True, null=True)

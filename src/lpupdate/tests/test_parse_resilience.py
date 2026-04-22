@@ -59,6 +59,8 @@ PARSED_UPDATE_KEYS = frozenset({
     "confidence_json",
     "source_path",
     "parser_version",
+    "source_occurred_at",
+    "source_type",
 })
 
 

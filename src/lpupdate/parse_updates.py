@@ -16,6 +16,36 @@ _EMPTY_PERIOD: dict[str, Any] = {
 }
 
 
+def source_occurred_at_iso(raw: dict[str, Any]) -> str | None:
+    """
+    Original event time from the source payload (email Date / Fathom call time).
+    Prefer normalized ISO from ingestion when present.
+    """
+    iso = raw.get('received_at_iso')
+    if isinstance(iso, str) and iso.strip():
+        return iso.strip()
+    ra = raw.get('received_at')
+    if ra is not None and str(ra).strip():
+        return str(ra).strip()
+    return None
+
+
+def infer_source_type_for_update(raw: dict[str, Any]) -> str:
+    """
+    Coarse source label for UI: gmail, fathom, pdf, or mixed (email + PDF text).
+    """
+    st = str(raw.get('source_type') or '').strip().lower()
+    if st == 'fathom_meeting':
+        return 'fathom'
+    has_pdf = bool(str(raw.get('attachment_text') or '').strip())
+    body = str(raw.get('body_text') or '').strip()
+    if has_pdf and body:
+        return 'mixed'
+    if has_pdf:
+        return 'pdf'
+    return 'gmail'
+
+
 def clean_bullet_line(text: str) -> str:
     """Strip noise from a single highlight/ask/risk line."""
     if not text:
@@ -859,4 +889,6 @@ def normalize_update(raw: dict[str, Any]) -> dict[str, Any]:
         'confidence_json': confidence,
         'source_path': raw.get('source_path'),
         'parser_version': 'v3',
+        'source_occurred_at': source_occurred_at_iso(raw),
+        'source_type': infer_source_type_for_update(raw),
     }

@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from ..parse_updates import infer_period
+from ..parse_updates import infer_period, infer_source_type_for_update, source_occurred_at_iso
 from ..vehicles import canonicalize_company_name
 from ..parsers.base import SourceBundle
 
@@ -106,7 +106,13 @@ def llm_extraction_to_parsed_update(
 
     metrics, confidence = _metrics_and_confidence(llm.get('keyMetrics'))
 
-    # extractionNotes and sourceType disagreements are preserved in provider_output (full LLM JSON).
+    st_raw = llm.get('sourceType')
+    if isinstance(st_raw, str) and st_raw.strip().lower() in ('gmail', 'pdf', 'fathom', 'mixed'):
+        source_type = st_raw.strip().lower()
+    else:
+        source_type = infer_source_type_for_update(raw)
+
+    # extractionNotes are preserved in provider_output (full LLM JSON).
 
     return {
         'gmail_message_id': raw.get('gmail_message_id'),
@@ -126,4 +132,6 @@ def llm_extraction_to_parsed_update(
         'confidence_json': confidence,
         'source_path': raw.get('source_path'),
         'parser_version': 'llm-v1',
+        'source_occurred_at': source_occurred_at_iso(raw),
+        'source_type': source_type,
     }

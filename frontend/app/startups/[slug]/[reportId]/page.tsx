@@ -23,6 +23,10 @@ type ApiReport = {
   quarter?: string | null;
   year?: number | null;
   received_at?: string | null;
+  source_type?: string | null;
+  source_label?: string | null;
+  source_occurred_at?: string | null;
+  ingestion_ran_at?: string | null;
   highlights?: string | string[] | null;
   opportunities_and_challenges?: string | null;
   metrics?: ApiReportMetric[] | null;
@@ -43,6 +47,9 @@ type NormalizedReportDetail = {
   startupName: string;
   reportPeriod: string;
   receivedAt: string;
+  sourceLabel: string;
+  sourceTime: string;
+  ingestedAt: string;
   subject: string;
   investmentVehicles: string[];
   summary: string;
@@ -51,6 +58,13 @@ type NormalizedReportDetail = {
   asks: string[];
   risks: string[];
 };
+
+function formatDisplayTime(iso: string | null | undefined): string {
+  if (!iso?.trim()) return "";
+  const d = new Date(iso.trim());
+  if (Number.isNaN(d.getTime())) return iso.trim();
+  return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
 
 /** API may return JSON arrays or legacy newline / stringified-JSON text. */
 function toBulletList(value?: string | string[] | null): string[] {
@@ -80,6 +94,10 @@ function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
   const startupName = rawReport.startup_name?.trim() || "Startup";
   const reportPeriod = rawReport.period_label?.trim() || `${rawReport.quarter ?? ""} ${rawReport.year ?? ""}`.trim() || "";
   const receivedAt = rawReport.received_at?.trim() || "";
+  const sourceLabel = rawReport.source_label?.trim() || rawReport.source_type?.trim() || "";
+  const sourceTime =
+    formatDisplayTime(rawReport.source_occurred_at) || formatDisplayTime(rawReport.received_at);
+  const ingestedAt = formatDisplayTime(rawReport.ingestion_ran_at);
   const subject = rawReport.subject?.trim() || "";
   const investmentVehicles = rawReport.vehicle_name?.trim() ? [rawReport.vehicle_name.trim()] : [];
 
@@ -99,6 +117,9 @@ function normalizeReportDetail(rawReport: ApiReport): NormalizedReportDetail {
     startupName,
     reportPeriod,
     receivedAt,
+    sourceLabel,
+    sourceTime,
+    ingestedAt,
     subject,
     investmentVehicles,
     summary,
@@ -220,6 +241,21 @@ export default async function ReportPage({ params }: PageProps) {
         <div style={{ marginBottom: 8 }}>
           <strong>Report period:</strong> {report.reportPeriod || "—"}
         </div>
+        {report.sourceLabel ? (
+          <div style={{ marginBottom: 8 }}>
+            <strong>Source:</strong> {report.sourceLabel}
+          </div>
+        ) : null}
+        {report.sourceTime ? (
+          <div style={{ marginBottom: 8 }}>
+            <strong>Source time:</strong> {report.sourceTime}
+          </div>
+        ) : null}
+        {report.ingestedAt ? (
+          <div style={{ marginBottom: 8 }}>
+            <strong>Ingested at:</strong> {report.ingestedAt}
+          </div>
+        ) : null}
         <div style={{ marginBottom: 8 }}>
           <strong>Received at:</strong> {report.receivedAt || "—"}
         </div>

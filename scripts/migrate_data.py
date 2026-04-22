@@ -57,14 +57,35 @@ def run_migration():
 
             print(f"Migrated {len(company_map)} startups.")
 
-            cur.execute("SELECT id, company_id, report_period_label, report_quarter, report_year, summary, metrics_json, highlights_json, asks_json, received_at FROM quarterly_updates;")
+            cur.execute(
+                """
+                SELECT id, company_id, report_period_label, report_quarter, report_year, summary,
+                       metrics_json, highlights_json, asks_json, received_at,
+                       source_occurred_at, ingestion_ran_at, source_type
+                FROM quarterly_updates;
+                """
+            )
             updates_data = cur.fetchall()
 
             reports_created = 0
             metrics_created = 0
 
             for row in updates_data:
-                old_id, company_id, label, quarter, year, summary, metrics_json, highlights_json, asks_json, received_at = row
+                (
+                    old_id,
+                    company_id,
+                    label,
+                    quarter,
+                    year,
+                    summary,
+                    metrics_json,
+                    highlights_json,
+                    asks_json,
+                    received_at,
+                    source_occurred_at,
+                    ingestion_ran_at,
+                    source_type,
+                ) = row
                 
                 if not company_id:
                     continue
@@ -110,6 +131,9 @@ def run_migration():
                             'asks': json.dumps(asks_json) if asks_json else '',
                             'period_label': label,
                             'received_at': received_at,
+                            'source_type': source_type,
+                            'source_occurred_at': source_occurred_at,
+                            'ingestion_ran_at': ingestion_ran_at,
                         }
                     )
                     
@@ -120,6 +144,12 @@ def run_migration():
                         report.period_label = label
                         if received_at:
                             report.received_at = received_at
+                        if source_type:
+                            report.source_type = source_type
+                        if source_occurred_at:
+                            report.source_occurred_at = source_occurred_at
+                        if ingestion_ran_at:
+                            report.ingestion_ran_at = ingestion_ran_at
                         report.save()
                     
                     if created:

@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import time
+from datetime import datetime, timezone
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -364,6 +365,7 @@ def cmd_parse_raw(args: argparse.Namespace) -> int:
             update['attachment_count'] = bundle.attachment_count
             update['attachment_text_present'] = bundle.attachment_text_present
             update['parse_provider'] = provider.name
+            update['ingestion_ran_at'] = datetime.now(timezone.utc).isoformat()
             write_json(out_dir / path.name, update)
             if result.provider_output is not None:
                 write_json(provider_out_dir / path.name, result.provider_output)
@@ -432,6 +434,7 @@ def cmd_bem_sample_run(args: argparse.Namespace) -> int:
         update = result.update
         update['attachment_count'] = bundle.attachment_count
         update['attachment_text_present'] = bundle.attachment_text_present
+        update['ingestion_ran_at'] = datetime.now(timezone.utc).isoformat()
         parsed_path = parsed_dir / f"{message_id}.json"
         write_json(parsed_path, update)
 

@@ -66,7 +66,11 @@ class StartupUpdate(models.Model):
     
     period_label = models.CharField(max_length=255, blank=True, null=True)
     received_at = models.DateTimeField(blank=True, null=True)
-    
+    # Mirrored from lpupdate quarterly_updates / parsed JSON (gmail|fathom|pdf|mixed).
+    source_type = models.CharField(max_length=32, blank=True, null=True)
+    source_occurred_at = models.DateTimeField(blank=True, null=True)
+    ingestion_ran_at = models.DateTimeField(blank=True, null=True)
+
     class Meta:
         unique_together = ('vehicle', 'startup', 'quarter', 'year')
         

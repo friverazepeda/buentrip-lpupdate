@@ -121,6 +121,9 @@ def get_update(database_url: str, update_id: int) -> dict[str, Any] | None:
                   q.report_quarter,
                   q.report_year,
                   q.received_at,
+                  q.source_occurred_at,
+                  q.ingestion_ran_at,
+                  q.source_type,
                   q.summary,
                   q.metrics_json,
                   q.highlights_json,
@@ -173,6 +176,9 @@ def get_company_updates(database_url: str, company_name: str) -> list[dict[str, 
                   q.report_quarter,
                   q.report_year,
                   q.received_at,
+                  q.source_occurred_at,
+                  q.ingestion_ran_at,
+                  q.source_type,
                   q.summary,
                   q.metrics_json,
                   q.highlights_json,
@@ -223,11 +229,13 @@ def upsert_quarterly_update(cur, email_message_id: int, company_id: int | None, 
         INSERT INTO quarterly_updates (
           company_id, email_message_id, report_period_label, report_quarter, report_year,
           received_at, summary, metrics_json, highlights_json, risks_json,
-          asks_json, people_json, confidence_json, parser_version
+          asks_json, people_json, confidence_json, parser_version,
+          source_occurred_at, ingestion_ran_at, source_type
         ) VALUES (
           %(company_id)s, %(email_message_id)s, %(report_period_label)s, %(report_quarter)s, %(report_year)s,
           %(received_at)s, %(summary)s, %(metrics_json)s::jsonb, %(highlights_json)s::jsonb, %(risks_json)s::jsonb,
-          %(asks_json)s::jsonb, %(people_json)s::jsonb, %(confidence_json)s::jsonb, %(parser_version)s
+          %(asks_json)s::jsonb, %(people_json)s::jsonb, %(confidence_json)s::jsonb, %(parser_version)s,
+          %(source_occurred_at)s, %(ingestion_ran_at)s, %(source_type)s
         )
         ON CONFLICT (email_message_id)
         DO UPDATE SET
@@ -243,7 +251,10 @@ def upsert_quarterly_update(cur, email_message_id: int, company_id: int | None, 
           asks_json = EXCLUDED.asks_json,
           people_json = EXCLUDED.people_json,
           confidence_json = EXCLUDED.confidence_json,
-          parser_version = EXCLUDED.parser_version
+          parser_version = EXCLUDED.parser_version,
+          source_occurred_at = EXCLUDED.source_occurred_at,
+          ingestion_ran_at = EXCLUDED.ingestion_ran_at,
+          source_type = EXCLUDED.source_type
         RETURNING id
         """,
         {
@@ -261,6 +272,9 @@ def upsert_quarterly_update(cur, email_message_id: int, company_id: int | None, 
             'people_json': json.dumps(record.get('people_json', [])),
             'confidence_json': json.dumps(record.get('confidence_json', {})),
             'parser_version': record.get('parser_version', 'v0'),
+            'source_occurred_at': record.get('source_occurred_at'),
+            'ingestion_ran_at': record.get('ingestion_ran_at'),
+            'source_type': record.get('source_type'),
         },
     )
     return cur.fetchone()[0]

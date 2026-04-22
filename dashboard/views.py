@@ -68,6 +68,28 @@ def _format_metric_cell(value: str | None) -> str:
     return v
 
 
+_SOURCE_TYPE_LABELS = {
+    'gmail': 'Gmail',
+    'fathom': 'Fathom',
+    'pdf': 'PDF',
+    'mixed': 'Mixed',
+}
+
+
+def _source_type_label(code: str | None) -> str | None:
+    if not code:
+        return None
+    return _SOURCE_TYPE_LABELS.get(str(code).lower(), str(code))
+
+
+def _dt_iso(value) -> str | None:
+    if value is None:
+        return None
+    if hasattr(value, 'isoformat'):
+        return value.isoformat()
+    return str(value) if value else None
+
+
 def _clean_narrative_block(text: str | None) -> str | None:
     if not text or not str(text).strip():
         return None
@@ -132,6 +154,9 @@ def api_startup_reports_by_slug(request, slug):
         'quarter',
         'year',
         'received_at',
+        'source_type',
+        'source_occurred_at',
+        'ingestion_ran_at',
     )
     payload = [
         {
@@ -140,6 +165,10 @@ def api_startup_reports_by_slug(request, slug):
             'quarter': report['quarter'],
             'year': report['year'],
             'received_at': report['received_at'].isoformat() if report['received_at'] else None,
+            'source_type': report['source_type'],
+            'source_label': _source_type_label(report['source_type']),
+            'source_occurred_at': report['source_occurred_at'].isoformat() if report['source_occurred_at'] else None,
+            'ingestion_ran_at': report['ingestion_ran_at'].isoformat() if report['ingestion_ran_at'] else None,
         }
         for report in reports
     ]
@@ -171,6 +200,10 @@ def api_report_by_id(request, id):
         'quarter': report.quarter,
         'year': report.year,
         'received_at': report.received_at.isoformat() if report.received_at else None,
+        'source_type': report.source_type,
+        'source_label': _source_type_label(report.source_type),
+        'source_occurred_at': _dt_iso(report.source_occurred_at),
+        'ingestion_ran_at': _dt_iso(report.ingestion_ran_at),
         'opportunities_and_challenges': _clean_narrative_block(report.opportunities_and_challenges),
         'fundraising_updates': _clean_narrative_block(report.fundraising_updates),
         'highlights': _section_field_to_list(report.highlights),

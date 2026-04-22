@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS quarterly_updates (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE quarterly_updates
+  ADD COLUMN IF NOT EXISTS source_occurred_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS ingestion_ran_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS source_type TEXT;
+
 CREATE TABLE IF NOT EXISTS attachments (
   id BIGSERIAL PRIMARY KEY,
   email_message_id BIGINT NOT NULL REFERENCES email_messages(id),
